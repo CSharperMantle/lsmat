@@ -165,17 +165,17 @@ lsmat_status_t LSMatHead_remove(LSMatHead_t *restrict head, LSMatCell_t *restric
         return ERR_GENERAL;
     }
     LSMatCell_t *const prec = LSMatCell_prec_of(cell, axis);
-    LSMatCell_t *const succ = LSMatCell_prec_of(cell, axis);
+    LSMatCell_t *const succ = LSMatCell_succ_of(cell, axis);
     if (succ != NULL) {
-        *LSMatCell_ref_prec_of(succ, axis) = LSMatCell_prec_of(cell, axis);
+        *LSMatCell_ref_prec_of(succ, axis) = prec;
         *LSMatCell_ref_succ_of(cell, axis) = NULL;
     }
     if (prec != NULL) {
-        *LSMatCell_ref_succ_of(prec, axis) = LSMatCell_succ_of(cell, axis);
+        *LSMatCell_ref_succ_of(prec, axis) = succ;
         *LSMatCell_ref_prec_of(cell, axis) = NULL;
-    }
-    if (prec == NULL && succ == NULL) {
-        head->first_cell = NULL;
+    } else {
+        // This is the first element
+        head->first_cell = succ;
     }
     return OK;
 }
@@ -240,8 +240,8 @@ static void LSMat_set_zero_(LSMat_t *restrict mat, size_t i_0, size_t i_1) {
     if (cell == NULL) {
         return;
     }
-    LSMatHead_remove(head_0, cell, 0);
-    LSMatHead_remove(head_1, cell, 1);
+    LSMatHead_remove(head_0, cell, 1);
+    LSMatHead_remove(head_1, cell, 0);
     free(cell);
 }
 
