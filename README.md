@@ -6,7 +6,45 @@ Simple library for creating and manipulating sparse matrices with linked-list st
 
 ## Introduction
 
-WIP.
+Interactively create sparse matrices and observe elementary operations on them.
+
+```text
+lsmat_cli > help
+new <ID> <DIM0> <DIM1>
+fillrand <ID>
+set <ID> <I0> <I1> <VAL>
+eval <DEST>=<EXPR>
+disp <ID> <PREC>
+quit
+help
+license
+OK
+lsmat_cli > new A 3 3
+OK
+lsmat_cli > fillrand A
+OK
+lsmat_cli > new 2I 3 3
+OK
+lsmat_cli > set 2I 0 0 2.0
+OK
+lsmat_cli > set 2I 1 1 2.0
+OK
+lsmat_cli > set 2I 2 2 2.0
+OK
+lsmat_cli > eval B=A*2I
+OK
+lsmat_cli > disp A 3
+0.416 0.751 0.028 
+0.268 0.729 0.312 
+0.280 0.298 0.324 
+OK
+lsmat_cli > disp B 3
+0.833 1.502 0.056 
+0.537 1.459 0.624 
+0.560 0.596 0.649 
+OK
+lsmat_cli > 
+```
 
 ## License
 
