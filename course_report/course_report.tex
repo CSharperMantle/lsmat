@@ -139,47 +139,27 @@
 
 \section{问题描述}
 
-TODO.
+稀疏矩阵 (sparse matrix), 在数值分析中, 是其元素大部分为零的矩阵. 反之, 如果大部分元素都非零, 则这个矩阵是稠密 (dense) 的. 在科学与工程领域中求解线性模型时经常出现大型的稀疏矩阵.
+
+在使用计算机存储和操作稀疏矩阵时, 经常需要修改标准算法以利用矩阵的稀疏结构. 由于其自身的稀疏特性, 通过压缩可以大大节省稀疏矩阵的内存代价. 更为重要的是, 由于过大的尺寸, 标准的算法经常无法操作这些稀疏矩阵.
+
+如 \ref{eq_1_smat_example} 所示为一个 $5 \times 5$ 的稀疏矩阵, 其中只有四个元素为非零值. 为了清楚起见, 零用点表示.
+\begin{equation}
+    \begin{bmatrix}
+        . & 1 & . & . & . \\
+        . & . & . & . & . \\
+        . & . & . & 2 & . \\
+        . & 3 & . & . & . \\
+        . & . & . & 4 & . \\
+    \end{bmatrix}.
+    \label{eq_1_smat_example}
+\end{equation}
+
+稀疏矩阵的存储可以使用十字链表等方式储存. 可以将矩阵中的非零元表示为链表中的节点, 指向其同行和同列之后的节点, 就组成了十字链表, 便于元素的访问和增删等操作. 每个链表节点除了储存自身的行列位置信息和值外, 还储存了同行列下一个非零节点的指针信息, 构成了二维形式的链表.
+
+在本次实践作业中, 需要基于十字链表实现对稀疏矩阵的创建, 储存和加法, 减法, 乘法, 转置等运算操作, 也可以自行添加新的数据导入导出, 矩阵运算等操作. 其中至少需要实现稀疏矩阵的创建和输入输出, 加法, 减法, 乘法和转置操作, 并给出相应算法的复杂度分析. 对于运算操作中可能出现的错误如尺寸不匹配, 不可逆 (若实现了求逆操作) 等情况, 需要能够捕获错误并提示. 在代码实现过程中还需要避免可能发生的内存泄漏.
 
 \section{主要算法}
-
-\subsection{迭代快速排序}
-
-算法 \ref{algo_quicksort_iter} 描述了迭代快速排序算法. 该算法通过维护一个显式的栈实现状态保存与恢复. 我们记 $\mathsf{Push}(\cdot, \cdot)$ 与 $\mathsf{Pop}(\cdot)$ 为压入与弹出操作, $\mathsf{Empty}(\cdot)$ 为判断栈是否为空的操作.
-
-\begin{breakablealgorithm}
-\caption{末主元迭代快速排序.}
-\label{algo_quicksort_iter}
-\begin{algorithmic}[1]
-\Require 待排序数组 $\bm{a},$ 全序关系 $\preceq,$ 待排序数组长度 $n.$
-\Ensure 排序完成的数组.
-\State 初始化栈 $s$
-\State $l \gets 1$
-\State $h \gets n$
-\State $\mathsf{Push}(s, (l, h))$
-\While{$\lnot \mathsf{Empty}(s)$}
-    \State $(l, h) \gets \mathsf{Pop}(s)$
-    \State $p \gets \bm{a}[h]$
-    \State $i \gets l$
-    \For{$j \gets l \dots h$}
-        \If{$\bm{a}[j] \preceq p$}
-            \State $\mathsf{Swap}(\bm{a}[i], \bm{a}[j])$
-            \State $i \gets i + 1$
-        \EndIf
-    \EndFor
-    \State $\mathsf{Swap}(\bm{a}[i], \bm{a}[h])$
-    \State $p \gets i$
-    \If{$p - 1 \ge l$}
-        \State $\mathsf{Push}(s, (l, p - 1))$
-    \EndIf
-    \If{$p + 1 < h$}
-        \State $\mathsf{Push}(s, (p + 1, h))$
-    \EndIf
-\EndWhile
-\State 销毁栈 $s$
-\State \Return $\bm{a}$
-\end{algorithmic}
-\end{breakablealgorithm}
 
 \subsection{回溯法迷宫探索}
 
@@ -217,30 +197,9 @@ TODO.
 
 本实验的源代码获取方式见附录 \ref{appendix_source_code}.
 
-\subsection{迭代快速排序}
-
-由于在专题任务 1 中, 我们对快速排序算法的实现已经采用了迭代法, 故不再重复具体过程. 相关实现代码见附录和专题任务 1.
-
-\subsection{回溯法迷宫探索}
-
-我们使用 C 语言为回溯法迷宫探索算法实现了一个简单的终端 ASCII-art 图形交互界面. 该程序包含基于 \texttt{ncurses} \cite{bib_ncurses} 的 Unix\textsuperscript{\textregistered} 分支和基于 \texttt{PDCurses} \cite{bib_pdcurses} 的 Windows\textsuperscript{\textregistered} 分支. 实现了跨平台的终端图形界面. 给定迷宫大小后, 用户可以使用键盘对迷宫结构进行编辑, 并在编辑完成后以每步为单位观察探索过程.
-
 \section{结果分析}
 
-\subsection{迭代快速排序}
-
-迭代法快速排序的分析见专题任务 1.
-
-\subsection{回溯法迷宫探索}
-
-如图 \ref{fig_screenshot_mazerwin} 所示, 我们使用 \texttt{mazer\_win} 程序对一个 $20 \times 20$ 的迷宫进行了探索. 该样例说明本程序能够实现稳定且用户友好的图形交互.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.4]{screenshot_mazerwin_v010}
-    \caption{\texttt{mazer\_win} 某一次运行的终端截图}
-    \label{fig_screenshot_mazerwin}
-\end{figure}
+TODO.
 
 \section{小结}
 
@@ -257,81 +216,10 @@ TODO.
 
 \section{附录: 算法实现}
 
-\subsection{迭代快速排序}
-
-\begin{lstlisting}[language=C]
-static algo_errno_t partition_highpivot(void *arr, size_t size, size_t low, size_t high, comp_t comp, uint64_t threshold, uint64_t *counter, size_t *out_result) {
-    uint8_t *arr_ = arr;
-
-    uint8_t *pivot = arr_ + high * size;
-    size_t i = low - 1;
-
-    for (size_t j = low; j <= high; j++) {
-        COUNTER_INC_AND_CHECK(*counter, threshold);
-        if (comp(arr_ + j * size, pivot) < 0) {
-            i++;
-            swap_bytes(arr_ + i * size, arr_ + j * size, size);
-        }
-    }
-    swap_bytes(arr_ + (i + 1) * size, arr_ + high * size, size);
-    *out_result = i + 1;
-
-    return OK;
-}
-
-static algo_errno_t quicksort_highpivot_impl(void *arr, size_t size, size_t low, size_t high, comp_t comp, uint64_t threshold, uint64_t *counter) {
-    size_t *stack = (size_t *)malloc(sizeof(size_t) * (high - low + 1));
-    if (stack == NULL) {
-        return INTERNAL_ERR;
-    }
-    
-    int64_t top = -1;
-
-    stack[++top] = low;
-    stack[++top] = high;
-
-    while (top >= 0) {
-        high = stack[top--];
-        low = stack[top--];
-
-        size_t p;
-        ALGO_ERRNO_UNWRAP_FREE(partition_highpivot(arr, size, low, high, comp, threshold, counter, &p), stack);
-
-        if (!((p - 1 - low) & (1ull << (sizeof(size_t) * 8 - 1)))) {
-            stack[++top] = low;
-            stack[++top] = p - 1;
-        }
-
-        if ((p + 1 - high) & (1ull << (sizeof(size_t) * 8 - 1))) {
-            stack[++top] = p + 1;
-            stack[++top] = high;
-        }
-    }
-
-    free(stack);
-
-    return OK;
-}
-
-algo_errno_t quicksort_highpivot(void *arr, size_t count, size_t size, comp_t comp, uint64_t threshold, uint64_t *out_counter) {
-    if (count <= 1) {
-        return OK;
-    }
-
-    return quicksort_highpivot_impl(arr, size, 0, count - 1, comp, threshold, out_counter);
-}
-\end{lstlisting}
-
-\subsection{小节?}
-
 \lstinputlisting[language=C]{../src/lsmat/lsmat.c}
 
 \section{附录: 源代码可见性}
 \label{appendix_source_code}
-
-迷宫探索程序的 C 语言源代码可于 \url{https://github.com/CSharperMantle/mazer} 和 \url{https://github.com/CSharperMantle/mazer_win} 处获得, 其中 \texttt{mazer\_win} 分支提供了预编译的可执行文件和调试符号, 但其并不随 \texttt{mazer} 更新. 欲了解如构建方法、 操作指引一类信息, 请阅读各仓库内的自述文件.
-
-迭代快速排序的 C 语言源代码可于 \url{https://github.com/CSharperMantle/sort_algo_perf} 处获得.
 
 上述代码均可在 BSD 3-Clause 许可证的条件与条款下使用. 关于授权协议的具体信息, 详见上述 URL.
 
