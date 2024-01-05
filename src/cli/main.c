@@ -86,12 +86,15 @@ static void push_ident_and_mat(const char *restrict ident, LSMat_t *restrict mat
 }
 
 static char *new_fmt_into(const char *restrict fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    const int fmt_len = vsnprintf(NULL, 0, fmt, args) + 1;
+    va_list args1;
+    va_list args2;
+    va_start(args1, fmt);
+    va_copy(args2, args1);
+    const int fmt_len = vsnprintf(NULL, 0, fmt, args1) + 1;
     char *fmt_buf = calloc(fmt_len, sizeof(char));
-    vsnprintf(fmt_buf, fmt_len, fmt, args);
-    va_end(args);
+    vsnprintf(fmt_buf, fmt_len, fmt, args2);
+    va_end(args1);
+    va_end(args2);
     return fmt_buf;
 }
 
