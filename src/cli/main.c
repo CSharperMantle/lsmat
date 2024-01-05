@@ -1,5 +1,7 @@
 #include "lsmat/lsarith.h"
 #include "lsmat/lsmat.h"
+#include <readline/history.h>
+#include <readline/readline.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,9 +30,12 @@ typedef struct CmdHandlerPair_ {
 
 static cmd_errno_t cmd_handler_new(void);
 static cmd_errno_t cmd_handler_fillrand(void);
+static cmd_errno_t cmd_handler_fillident(void);
 static cmd_errno_t cmd_handler_set(void);
 static cmd_errno_t cmd_handler_eval(void);
+static cmd_errno_t cmd_handler_shapeof(void);
 static cmd_errno_t cmd_handler_disp(void);
+static cmd_errno_t cmd_handler_dbg_nodes(void);
 static cmd_errno_t cmd_handler_quit(void);
 static cmd_errno_t cmd_handler_help(void);
 static cmd_errno_t cmd_handler_license(void);
@@ -39,16 +44,17 @@ static cmd_errno_t cmd_handler_null(void);
 static const CmdHandlerPair_t CMDS[] = {
     {.cmd = "new", .handler = cmd_handler_new, .help_str = "new <ID> <DIM0> <DIM1>"},
     {.cmd = "fillrand", .handler = cmd_handler_fillrand, .help_str = "fillrand <ID>"},
+    {.cmd = "fillident", .handler = cmd_handler_fillident, .help_str = "fillident <ID>"},
     {.cmd = "set", .handler = cmd_handler_set, .help_str = "set <ID> <I0> <I1> <VAL>"},
     {.cmd = "eval", .handler = cmd_handler_eval, .help_str = "eval <DEST>=<EXPR>"},
+    {.cmd = "shapeof", .handler = cmd_handler_shapeof, .help_str = "shapeof <ID>"},
     {.cmd = "disp", .handler = cmd_handler_disp, .help_str = "disp <ID> <PREC>"},
+    {.cmd = "dbg_nodes", .handler = cmd_handler_dbg_nodes, .help_str = "dbg_nodes <ID>"},
     {.cmd = "quit", .handler = cmd_handler_quit, .help_str = "quit"},
     {.cmd = "help", .handler = cmd_handler_help, .help_str = "help"},
     {.cmd = "license", .handler = cmd_handler_license, .help_str = "license"},
     {.cmd = NULL, .handler = cmd_handler_null, .help_str = NULL},
 };
-
-static char buf_input[256] = {0};
 
 static char mat_idents[MAX_LEN_IDENT][N_MATS] = {0};
 static LSMat_t *mats[N_MATS] = {0};
@@ -137,6 +143,37 @@ static cmd_errno_t cmd_handler_fillrand(void) {
                 puts("FATAL: Matrix element set failed");
                 return QUIT;
             }
+        }
+    }
+    puts("OK");
+    return CONT;
+}
+
+static cmd_errno_t cmd_handler_fillident(void) {
+    const char *name = strtok(NULL, " ");
+    if (!name) {
+        puts("ERROR: Missing arguments; type help to learn more");
+        return CONT;
+    }
+    size_t idx_mat = SIZE_MAX;
+    bool found = find_ident(name, &idx_mat);
+    if (!found) {
+        printf("ERROR: Undefined identifier '%s'\n", name);
+        return CONT;
+    }
+    LSMat_t *mat = mats[idx_mat];
+    if (mat->shape[LSMAT_AXIS_0] != mat->shape[LSMAT_AXIS_1]) {
+        puts("ERROR: Not a square matrix");
+        return CONT;
+    }
+    if (LSMat_zero(mat) != LSMAT_OK) {
+        puts("FATAL: Matrix zeroing failed");
+        return QUIT;
+    }
+    for (size_t i = 0; i < mat->shape[LSMAT_AXIS_0]; i++) {
+        if (LSMat_set(mat, i, i, 1.0) != LSMAT_OK) {
+            puts("FATAL: Matrix element set failed");
+            return QUIT;
         }
     }
     puts("OK");
@@ -296,6 +333,24 @@ static cmd_errno_t cmd_handler_eval(void) {
     return CONT;
 }
 
+static cmd_errno_t cmd_handler_shapeof(void) {
+    const char *name = strtok(NULL, " ");
+    if (!name) {
+        puts("ERROR: Missing arguments; type help to learn more");
+        return CONT;
+    }
+    size_t idx_mat = SIZE_MAX;
+    bool found = find_ident(name, &idx_mat);
+    if (!found) {
+        printf("ERROR: Undefined identifier '%s'\n", name);
+        return CONT;
+    }
+    const LSMat_t *mat = mats[idx_mat];
+    printf("(%zu,%zu)\n", mat->shape[LSMAT_AXIS_0], mat->shape[LSMAT_AXIS_1]);
+    puts("OK");
+    return CONT;
+}
+
 static cmd_errno_t cmd_handler_disp(void) {
     const char *name = strtok(NULL, " ");
     const char *s_prec = strtok(NULL, " ");
@@ -336,11 +391,34 @@ static cmd_errno_t cmd_handler_disp(void) {
     return CONT;
 }
 
-static cmd_errno_t cmd_handler_quit(void) {
-    puts("INFO: Cleaning up and quitting");
-    for (size_t i = 0; i < n_mats; i++) {
-        LSMat_free(mats[i]);
+static cmd_errno_t cmd_handler_dbg_nodes(void) {
+    const char *name = strtok(NULL, " ");
+    if (!name) {
+        puts("ERROR: Missing arguments; type help to learn more");
+        return CONT;
     }
+    size_t idx_mat = SIZE_MAX;
+    bool found = find_ident(name, &idx_mat);
+    if (!found) {
+        printf("ERROR: Undefined identifier '%s'\n", name);
+        return CONT;
+    }
+    size_t n = 0;
+    const LSMat_t *mat = mats[idx_mat];
+    for (size_t i = 0; i < mat->shape[LSMAT_AXIS_0]; i++) {
+        LSMatHead_t *h = mat->heads[LSMAT_AXIS_0] + i;
+        LSMatCell_t *p = h == NULL ? NULL : h->first_cell;
+        while (p != NULL) {
+            n++;
+            p = p->axes[LSMAT_AXIS_0].next;
+        }
+    }
+    printf("%zu\n", n);
+    puts("OK");
+    return CONT;
+}
+
+static cmd_errno_t cmd_handler_quit(void) {
     puts("OK");
     return QUIT;
 }
@@ -394,10 +472,21 @@ static cmd_errno_t cmd_handler_null(void) {
     return CONT;
 }
 
+static char *readline_gets(const char *restrict prompt) {
+    static char *line_read = NULL;
+    if (line_read) {
+        free(line_read);
+        line_read = NULL;
+    }
+    line_read = readline(prompt);
+    if (line_read && *line_read) {
+        add_history(line_read);
+    }
+    return line_read;
+}
+
 static cmd_errno_t main_loop(void) {
-    printf("lsmat_cli > ");
-    fgets(buf_input, sizeof(buf_input), stdin);
-    buf_input[strlen(buf_input) - 1] = '\0';
+    char *buf_input = readline_gets("lsmat_cli > ");
 
     const char *cmd_str = strtok(buf_input, " ");
     cmd_errno_t e = QUIT;
@@ -414,6 +503,10 @@ static cmd_errno_t main_loop(void) {
 int main(void) {
     while (main_loop() == CONT) {
         ;
+    }
+    puts("INFO: Cleaning up and quitting");
+    for (size_t i = 0; i < n_mats; i++) {
+        LSMat_free(mats[i]);
     }
     return 0;
 }

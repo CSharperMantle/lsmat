@@ -6,15 +6,17 @@ set_warnings("all", "extra", "pedantic")
 if is_mode("debug") then
     set_optimize("none")
     set_symbols("debug", "hidden")
-    set_policy("build.sanitizer.address", true)
-    set_policy("build.sanitizer.undefined", true)
 else
     set_optimize("fastest")
     set_symbols("hidden")
     set_strip("all")
 end
+set_policy("build.sanitizer.address", true)
+set_policy("build.sanitizer.undefined", true)
 
 add_includedirs("include")
+
+add_requires("readline ~8.1")
 
 target("lsmat")
     set_kind("static")
@@ -25,4 +27,5 @@ target("lsmat_cli")
     set_kind("binary")
     add_files("src/cli/*.c")
     add_deps("lsmat")
+    add_packages("readline")
 target_end()

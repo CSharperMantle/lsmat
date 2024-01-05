@@ -12,27 +12,27 @@
 
 #define MAP_AXIS_(m_, a_) (m_->axes_mapping[a_])
 
-static size_t LSMatCell_idx_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
+size_t LSMatCell_idx_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
     return cell != NULL ? cell->axes[axis % LSMAT_AXIS_COUNT_].i : SIZE_MAX;
 }
 
-static LSMatCell_t *LSMatCell_succ_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
+LSMatCell_t *LSMatCell_succ_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
     return cell != NULL ? cell->axes[axis % LSMAT_AXIS_COUNT_].next : NULL;
 }
 
-static LSMatCell_t **LSMatCell_ref_succ_of(LSMatCell_t *restrict cell, lsmat_axis_t axis) {
+LSMatCell_t **LSMatCell_ref_succ_of(LSMatCell_t *restrict cell, lsmat_axis_t axis) {
     return cell != NULL ? &cell->axes[axis % LSMAT_AXIS_COUNT_].next : NULL;
 }
 
-static LSMatCell_t *LSMatCell_prec_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
+LSMatCell_t *LSMatCell_prec_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
     return cell != NULL ? cell->axes[axis % LSMAT_AXIS_COUNT_].prev : NULL;
 }
 
-static LSMatCell_t **LSMatCell_ref_prec_of(LSMatCell_t *restrict cell, lsmat_axis_t axis) {
+LSMatCell_t **LSMatCell_ref_prec_of(LSMatCell_t *restrict cell, lsmat_axis_t axis) {
     return cell != NULL ? &cell->axes[axis % LSMAT_AXIS_COUNT_].prev : NULL;
 }
 
-static lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t axis) {
+lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t axis) {
     LSMatCell_t *p = head->first_cell;
     head->first_cell = NULL;
     while (p != NULL) {
@@ -43,8 +43,7 @@ static lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t 
     return LSMAT_OK;
 }
 
-static LSMatCell_t *LSMatHead_cell_at(const LSMatHead_t *restrict head, size_t i,
-                                      lsmat_axis_t axis) {
+LSMatCell_t *LSMatHead_cell_at(const LSMatHead_t *restrict head, size_t i, lsmat_axis_t axis) {
     if (head == NULL) {
         return NULL;
     }
@@ -58,8 +57,8 @@ static LSMatCell_t *LSMatHead_cell_at(const LSMatHead_t *restrict head, size_t i
     return NULL;
 }
 
-static lsmat_errno_t LSMatHead_insert(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
-                                      lsmat_axis_t axis, LSMatCell_t **restrict out_dup) {
+lsmat_errno_t LSMatHead_insert(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
+                               lsmat_axis_t axis, LSMatCell_t **restrict out_dup) {
     if (head == NULL || cell == NULL || out_dup == NULL) {
         return LSMAT_E_GEN;
     }
@@ -111,8 +110,8 @@ static lsmat_errno_t LSMatHead_insert(LSMatHead_t *restrict head, LSMatCell_t *r
     }
 }
 
-static lsmat_errno_t LSMatHead_remove(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
-                                      lsmat_axis_t axis) {
+lsmat_errno_t LSMatHead_remove(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
+                               lsmat_axis_t axis) {
     if (head == NULL || cell == NULL) {
         return LSMAT_E_GEN;
     }

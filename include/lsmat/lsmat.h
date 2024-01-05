@@ -28,23 +28,23 @@ typedef struct LSMatCell_ {
     double v;
 } LSMatCell_t;
 
-// size_t LSMatCell_idx_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
-// LSMatCell_t *LSMatCell_succ_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
-// LSMatCell_t **LSMatCell_ref_succ_of(LSMatCell_t *restrict cell, lsmat_axis_t axis);
-// LSMatCell_t *LSMatCell_prec_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
-// LSMatCell_t **LSMatCell_ref_prec_of(LSMatCell_t *restrict cell, lsmat_axis_t axis);
+size_t LSMatCell_idx_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
+LSMatCell_t *LSMatCell_succ_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
+LSMatCell_t **LSMatCell_ref_succ_of(LSMatCell_t *restrict cell, lsmat_axis_t axis);
+LSMatCell_t *LSMatCell_prec_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
+LSMatCell_t **LSMatCell_ref_prec_of(LSMatCell_t *restrict cell, lsmat_axis_t axis);
 
 typedef struct LSMatHead_ {
     LSMatCell_t *first_cell;
 } LSMatHead_t;
 
-// lsmat_errno_t LSMatHead_init(LSMatHead_t *restrict head);
-// lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t axis);
-// LSMatCell_t *LSMatHead_cell_at(const LSMatHead_t *restrict head, size_t i, lsmat_axis_t axis);
-// lsmat_errno_t LSMatHead_insert(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
-//                                lsmat_axis_t axis, LSMatCell_t **restrict out_dup);
-// lsmat_errno_t LSMatHead_remove(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
-//                                lsmat_axis_t axis);
+lsmat_errno_t LSMatHead_init(LSMatHead_t *restrict head);
+lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t axis);
+LSMatCell_t *LSMatHead_cell_at(const LSMatHead_t *restrict head, size_t i, lsmat_axis_t axis);
+lsmat_errno_t LSMatHead_insert(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
+                               lsmat_axis_t axis, LSMatCell_t **restrict out_dup);
+lsmat_errno_t LSMatHead_remove(LSMatHead_t *restrict head, LSMatCell_t *restrict cell,
+                               lsmat_axis_t axis);
 
 typedef struct LSMat_ {
     size_t shape[LSMAT_AXIS_COUNT_];
