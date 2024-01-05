@@ -45,8 +45,8 @@ lsarith_errno_t LSArith_mat_add(const LSMat_t *restrict a, const LSMat_t *restri
     }
     LSMat_zero(out);
     for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
-        LSMatCell_t *pa = (a->heads[LSMAT_AXIS_0] + i)->first_cell;
-        LSMatCell_t *pb = (b->heads[LSMAT_AXIS_0] + i)->first_cell;
+        LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
+        LSMatCell_t *pb = b->heads[LSMAT_AXIS_0][i].first_cell;
         for (size_t j = 0; j < a->shape[LSMAT_AXIS_1]; j++) {
             double va = LSArith_cell_find_cont_(&pa, j, LSMAT_AXIS_1);
             double vb = LSArith_cell_find_cont_(&pb, j, LSMAT_AXIS_1);
@@ -63,8 +63,8 @@ lsarith_errno_t LSArith_mat_sub(const LSMat_t *restrict a, const LSMat_t *restri
     }
     LSMat_zero(out);
     for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
-        LSMatCell_t *pa = (a->heads[LSMAT_AXIS_0] + i)->first_cell;
-        LSMatCell_t *pb = (b->heads[LSMAT_AXIS_0] + i)->first_cell;
+        LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
+        LSMatCell_t *pb = b->heads[LSMAT_AXIS_0][i].first_cell;
         for (size_t j = 0; j < a->shape[LSMAT_AXIS_1]; j++) {
             double va = LSArith_cell_find_cont_(&pa, j, LSMAT_AXIS_1);
             double vb = LSArith_cell_find_cont_(&pb, j, LSMAT_AXIS_1);
@@ -85,8 +85,8 @@ lsarith_errno_t LSArith_mat_mul(const LSMat_t *restrict a, const LSMat_t *restri
     for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
         for (size_t j = 0; j < b->shape[LSMAT_AXIS_1]; j++) {
             double sum = 0.0;
-            LSMatCell_t *pa = (a->heads[LSMAT_AXIS_0] + i)->first_cell;
-            LSMatCell_t *pb = (b->heads[LSMAT_AXIS_1] + j)->first_cell;
+            LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
+            LSMatCell_t *pb = b->heads[LSMAT_AXIS_1][j].first_cell;
             for (size_t k = 0; k < a->shape[LSMAT_AXIS_1]; k++) {
                 const double va = LSArith_cell_find_cont_(&pa, k, LSMAT_AXIS_1);
                 const double vb = LSArith_cell_find_cont_(&pb, k, LSMAT_AXIS_0);

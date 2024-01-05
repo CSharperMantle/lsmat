@@ -2,6 +2,7 @@
 #include "lsmat/lsmat.h"
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +36,7 @@ static cmd_errno_t cmd_handler_set(void);
 static cmd_errno_t cmd_handler_eval(void);
 static cmd_errno_t cmd_handler_shapeof(void);
 static cmd_errno_t cmd_handler_disp(void);
+static cmd_errno_t cmd_handler_dispnzt(void);
 static cmd_errno_t cmd_handler_dbg_nodes(void);
 static cmd_errno_t cmd_handler_quit(void);
 static cmd_errno_t cmd_handler_help(void);
@@ -49,6 +51,7 @@ static const CmdHandlerPair_t CMDS[] = {
     {.cmd = "eval", .handler = cmd_handler_eval, .help_str = "eval <DEST>=<EXPR>"},
     {.cmd = "shapeof", .handler = cmd_handler_shapeof, .help_str = "shapeof <ID>"},
     {.cmd = "disp", .handler = cmd_handler_disp, .help_str = "disp <ID> <PREC>"},
+    {.cmd = "dispnzt", .handler = cmd_handler_dispnzt, .help_str = "dispnzt <ID> <PREC>"},
     {.cmd = "dbg_nodes", .handler = cmd_handler_dbg_nodes, .help_str = "dbg_nodes <ID>"},
     {.cmd = "quit", .handler = cmd_handler_quit, .help_str = "quit"},
     {.cmd = "help", .handler = cmd_handler_help, .help_str = "help"},
@@ -80,6 +83,16 @@ static void push_ident_and_mat(const char *restrict ident, LSMat_t *restrict mat
     strcpy(mat_idents[n_mats], ident);
     mats[n_mats] = mat;
     n_mats++;
+}
+
+static char *new_fmt_into(const char *restrict fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    const int fmt_len = vsnprintf(NULL, 0, fmt, args) + 1;
+    char *fmt_buf = calloc(fmt_len, sizeof(char));
+    vsnprintf(fmt_buf, fmt_len, fmt, args);
+    va_end(args);
+    return fmt_buf;
 }
 
 static cmd_errno_t cmd_handler_new(void) {
@@ -364,27 +377,51 @@ static cmd_errno_t cmd_handler_disp(void) {
         return CONT;
     }
     size_t idx_mat = SIZE_MAX;
-    bool found = false;
-    for (size_t i = 0; i < n_mats; i++) {
-        if (strcmp(mat_idents[i], name) == 0) {
-            idx_mat = i;
-            found = true;
-            break;
-        }
-    }
+    bool found = find_ident(name, &idx_mat);
     if (!found) {
         printf("ERROR: Undefined identifier '%s'\n", name);
         return CONT;
     }
-    const int fmt_len = snprintf(NULL, 0, "%%.%ldf ", prec) + 1;
-    char *fmt_buf = calloc(fmt_len, sizeof(char));
-    snprintf(fmt_buf, fmt_len, "%%.%ldf ", prec);
+    char *fmt_buf = new_fmt_into("%%.%ldf ", prec);
     const LSMat_t *mat = mats[idx_mat];
     for (size_t i = 0; i < mat->shape[LSMAT_AXIS_0]; i++) {
         for (size_t j = 0; j < mat->shape[LSMAT_AXIS_1]; j++) {
             printf(fmt_buf, LSMat_at(mat, i, j));
         }
         putchar('\n');
+    }
+    free(fmt_buf);
+    puts("OK");
+    return CONT;
+}
+
+static cmd_errno_t cmd_handler_dispnzt(void) {
+    const char *name = strtok(NULL, " ");
+    const char *s_prec = strtok(NULL, " ");
+    if (!name || !s_prec) {
+        puts("ERROR: Missing arguments; type help to learn more");
+        return CONT;
+    }
+    const long prec = strtol(s_prec, NULL, 10);
+    if (prec < 0) {
+        puts("ERROR: Invalid PREC; non-negative integer wanted");
+        return CONT;
+    }
+    size_t idx_mat = SIZE_MAX;
+    bool found = find_ident(name, &idx_mat);
+    if (!found) {
+        printf("ERROR: Undefined identifier '%s'\n", name);
+        return CONT;
+    }
+    char *fmt_buf = new_fmt_into("(%%zu,%%zu): %%.%ldf\n", prec);
+    const LSMat_t *mat = mats[idx_mat];
+    for (size_t i = 0; i < mat->shape[LSMAT_AXIS_0]; i++) {
+        LSMatHead_t h = mat->heads[LSMAT_AXIS_0][i];
+        LSMatCell_t *p = h.first_cell;
+        while (p != NULL) {
+            printf(fmt_buf, p->axes[LSMAT_AXIS_0].i, p->axes[LSMAT_AXIS_1].i, p->v);
+            p = p->axes[LSMAT_AXIS_0].next;
+        }
     }
     free(fmt_buf);
     puts("OK");
@@ -406,8 +443,8 @@ static cmd_errno_t cmd_handler_dbg_nodes(void) {
     size_t n = 0;
     const LSMat_t *mat = mats[idx_mat];
     for (size_t i = 0; i < mat->shape[LSMAT_AXIS_0]; i++) {
-        LSMatHead_t *h = mat->heads[LSMAT_AXIS_0] + i;
-        LSMatCell_t *p = h == NULL ? NULL : h->first_cell;
+        LSMatHead_t h = mat->heads[LSMAT_AXIS_0][i];
+        LSMatCell_t *p = h.first_cell;
         while (p != NULL) {
             n++;
             p = p->axes[LSMAT_AXIS_0].next;
