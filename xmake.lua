@@ -16,7 +16,7 @@ set_policy("build.sanitizer.undefined", true)
 
 add_includedirs("include")
 
-add_requires("readline ~8.1")
+add_requires("readline ~8")
 
 target("lsmat")
     set_kind("static")
