@@ -42,6 +42,7 @@ static lsarith_errno_t LSArith_mat_addsub_(const LSMat_t *restrict a, const LSMa
             double va = LSMatCell_find_cont(&pa, j, LSMAT_AXIS_1);
             double vb = LSMatCell_find_cont(&pb, j, LSMAT_AXIS_1);
             LSMat_set(out, i, j, sub ? va - vb : va + vb);
+            j++;
         }
     }
     return LSARITH_OK;
