@@ -25,6 +25,7 @@
 \section{主要算法}
 
 \subsection{数据结构描述}
+\label{sec_data_structure}
 
 一个完整的十字链表可以表示为四元组 $M = \langle \bm{s} \in \mathbb{Z}_{+}^{2}, \bm{r}, \bm{c} \rangle,$ 其中各分量分别表示形状、 行首数组、 列首数组和数据节点集合. 对于矩阵中的所有非零元, 存在 $n = \left\langle v, \bm{a} \right\rangle,$ 其中 $\bm{a}$ 为各维度上的坐标与邻接信息数组, 每个 $\bm{a}$ 的分量都可以表示为三元组 $\bm{a}[j] = \left\langle i \in \mathbb{Z}_+, prev, next\right\rangle,$ 分别为该元素在该维度中的下标、 前驱和后继. 对于每个存在非零元的行或列, 其行、 列首数组的相应位置存在指向该行或列的首个非零元素的一条边. 所有分量均由 0 开始标号.
 
@@ -368,6 +369,14 @@
 
 \section{结果分析}
 
+\subsection{实验与定性解释}
+
+我们测量了不同参数下的稀疏矩阵与稠密数组之间所需内存空间的差异. 如图 \ref{fig_lsmat_plot_mem_zero}、 图 \ref{fig_lsmat_plot_mem_identity} 和图 \ref{fig_lsmat_plot_mem_halfzero} 所示, 我们分别创建了不同大小的零矩阵、 单位阵和一半元素非零的矩阵, 比较稠密数组与稀疏矩阵在存储这些数据时的内存占用.
+
+我们发现, 与数组显然线性的内存占用增长趋势不同, 稀疏矩阵存在明显的非线性. 在矩阵形状较小时, 稀疏矩阵在所测量的三种元素分布下均劣于稠密数组, 这是因为稀疏矩阵需要除实际数据之外的其他空间保存节点邻接信息、 维首指针等元数据. 在数据稀疏程度一定时, 矩阵的形状越大, 这部分开销的占比越小.
+
+同样可以观察到, 在存储如单位阵等稀疏程度较高的矩阵时, 稠密数组的内存占用明显劣于基于十字链表的稀疏矩阵, 但是随着稠密度上升, 稀疏矩阵的内存占用线性增加, 当数据完全稠密时其内存占用达到稠密数组的 7 倍, 如图 \ref{fig_lsmat_plot_percent_vs_mem_25by25} 所示. 这说明稀疏矩阵有一最优的数据稀疏度.
+
 \begin{figure}
     \centering
     \includegraphics[scale=0.7]{lsmat_plot_mem_zero}
@@ -385,19 +394,68 @@
 \begin{figure}
     \centering
     \includegraphics[scale=0.7]{lsmat_plot_mem_halfzero}
-    \caption{稀疏矩阵与稠密数组存储一半元素非零矩阵阵的内存占用对比}
+    \caption{稀疏矩阵与稠密数组存储一半元素非零矩阵的内存占用对比}
     \label{fig_lsmat_plot_mem_halfzero}
 \end{figure}
 
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.7]{lsmat_plot_percent_vs_mem_25by25}
+    \caption{稀疏矩阵与稠密数组存储零元占比不同的 $25 \times 25$ 矩阵的内存占用对比}
+    \label{fig_lsmat_plot_percent_vs_mem_25by25}
+\end{figure}
+
+\subsection{稀疏矩阵适用性的定量分析}
+
+由于我们所对比的两种数据结构均有完整的定义, 我们能够计算出其精确的内存消耗. 我们不妨设待存储矩阵形状为 $m \times n,$ 其中每个元素占据空间为 $E.$ 矩阵稠密度 $d$ 的含义为该矩阵中有 $\lfloor mnd \rfloor$ 个非零元素. 我们不对这些元素的空间排列做任何假设. 同时, 根据计算机中常常使用指针表示有向边, 我们规定每个指针占据 $P$ 大小的空间. 为了方便起见, 我们假设长度、 下标等元数据标量均同样占据 $P$ 的空间.
+
+\newcommand{\Mem}[2]{\mathsf{Mem}_{\mathrm{#1}}(#2)}
+
+\paragraph{稠密数组的空间占用} 稠密数组的各元素紧密排列, 与稠密度无关, 且仅需要存储形状的 $2P$ 元数据开销, 因此其空间占用是关于变量 $m, n$ 的简单函数:
+\begin{equation}
+    \Mem{D}{m, n} = mnE + 2P.
+    \label{eq_mem_densearray}
+\end{equation}
+
+\paragraph{稀疏矩阵的空间占用} 稀疏矩阵本身需要存储形状, 同时需要预留 $(m + n)P$ 大小的空间用于存储维首边. 对于每个非零元素, 都需要为其分配一个链表节点, 其在每一维上都有一个下标和两条有向边 (详见节 \ref{sec_data_structure}). 将这些数据的大小与实际元素的大小相加, 可以得到每个节点的总大小为 $E + 6P.$ 对于一个稠密度为 $d$ 的矩阵, 一共需要分配的空间如下:
+\begin{equation}
+    \Mem{S}{m, n, d} = \lfloor mnd \rfloor(E + 6P) + (m + n)P.
+    \label{eq_mem_sparsematix}
+\end{equation}
+
+\paragraph{建立优化模型} 将式 \ref{eq_mem_densearray} 与式 \ref{eq_mem_sparsematix} 作差可以得到容易求解的三元函数, 以稠密度 $d$ 作为主元便可求得给定 $m, n$ 时使该函数取到局部极值的最优解.
+\begin{equation}
+    \begin{aligned}
+        f(m, n, d) & = \Mem{S}{m, n, d} - \Mem{D}{m, n}\\
+        & = \lfloor mnd \rfloor(E + 6P) + (m + n - 2)P - mnE.\\
+    \end{aligned}
+    \label{eq_mem_optim_goal}
+\end{equation}
+
+对式 \ref{eq_mem_optim_goal} 在 $d \in [0, 1]$ 上进行约束放松近似, 得到:
+\begin{equation}
+    \tilde{f}(m, n, d) = (mnd)(E + 6P) + (m + n - 2)P - mnE.
+    \label{eq_mem_optim_goal_relaxed}
+\end{equation}
+
+\paragraph{求解理想稠密度} 求函数 $\tilde{f}$ 关于稠密度 $d$ 的偏导, 得:
+\begin{equation}
+    \frac{\partial \tilde{f}}{\partial d} = mn(E + 6P).
+\end{equation}
+
+显然在 $m, n \in \mathbb{Z}_+$ 的前提下, 函数 $\tilde{f}$ 关于 $d$ 单调递增. 因为在该优化问题中我们需要将目标函数最小化, 则可以得出结论: 在稠密度等于 0 时, 即所有元素均为 0 时, 稀疏矩阵的存储优势最大.
+
 \section{小结}
 
-TODO.
+本次实验中, 我们使用十字链表实现了存储空间上高效且操作时间上实现良好折中的稀疏矩阵存储与相关操作, 并将其空间性能与稠密数组进行了定性和定量的比较分析. 在此过程中, 我们对 C 语言中指针的操作有了进一步了解, 对编写简单的控制台交互界面有了更深入的体会. 
 
 \begin{thebibliography}{}
 
 \bibitem{bib_numpy} Van der Walt, S.; Colbert, S. C.; Varoquaux, G. The NumPy Array: A Structure for Efficient Numerical Computation \textbf{[J]}. \textit{Computing in Science \& Engineering}, 2011, 13(2): 22-30. DOI:\href{https://doi.org/10.1109/MCSE.2011.37}{10.1109/MCSE.2011.37}.
 
 \end{thebibliography}
+
+\newpage
 
 \appendix
 
@@ -421,10 +479,14 @@ TODO.
 
 \lstinputlisting[language=C]{./../../src/cli/main.c}
 
+\newpage
+
 \section{附录: 源代码可见性}
 \label{appendix_source_code}
 
 本项目代码可于 \url{https://github.com/CSharperMantle/lsmat} 获取, 并在 BSD 3-Clause 许可证的条件与条款下使用. 授权协议的具体信息见上述 URL.
+
+\newpage
 
 \section{附录: 课程思政报告}
 \label{appendix_ideology}
