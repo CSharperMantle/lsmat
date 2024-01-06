@@ -24,7 +24,7 @@
 
 \subsection{数据结构描述}
 
-一个完整的十字链表可以表示为四元组 $M = \left\langle \bm{s} \in \mathbb{Z}_{+}^{2}, \bm{r}, \bm{c} \right\rangle,$ 其中各分量分别表示形状、 行首数组、 列首数组和数据节点集合. 对于矩阵中的所有非零元, 存在 $n = \left\langle v, \bm{a} \right\rangle,$ 其中 $\bm{a}$ 为各维度上的坐标与邻接信息数组, 每个 $\bm{a}$ 的分量都可以表示为三元组 $\bm{a}[j] = \left\langle i \in \mathbb{Z}_+, prev, next\right\rangle,$ 分别为该元素在该维度中的下标、 前驱和后继. 对于每个存在非零元的行或列, 其行、 列首数组的相应位置存在指向该行或列的首个非零元素的一条边. 所有分量均由 0 开始标号.
+一个完整的十字链表可以表示为四元组 $M = \langle \bm{s} \in \mathbb{Z}_{+}^{2}, \bm{r}, \bm{c} \rangle,$ 其中各分量分别表示形状、 行首数组、 列首数组和数据节点集合. 对于矩阵中的所有非零元, 存在 $n = \left\langle v, \bm{a} \right\rangle,$ 其中 $\bm{a}$ 为各维度上的坐标与邻接信息数组, 每个 $\bm{a}$ 的分量都可以表示为三元组 $\bm{a}[j] = \left\langle i \in \mathbb{Z}_+, prev, next\right\rangle,$ 分别为该元素在该维度中的下标、 前驱和后继. 对于每个存在非零元的行或列, 其行、 列首数组的相应位置存在指向该行或列的首个非零元素的一条边. 所有分量均由 0 开始标号.
 
 在本文中, 当遇到不指向任何有意义节点的边时, 我们使用 $\Lambda$ 表示该边. 实际上, 在算法实现中, 我们使用特殊指针值 \texttt{NULL} 实现 $\Lambda.$
 
@@ -67,8 +67,7 @@
 \Function{SMatrix-New}{$\bm{s}$}
     \State $\bm{r} \gets$ 长度为 $\bm{s}[0]$ 的数组, 元素全为 $\Lambda$
     \State $\bm{c} \gets$ 长度为 $\bm{s}[1]$ 的数组, 元素全为 $\Lambda$
-    \State $N \gets \emptyset$
-    \State \Return $\left\langle \bm{s}, \bm{r}, \bm{c}, N\right\rangle$
+    \State \Return $\left\langle \bm{s}, \bm{r}, \bm{c} \right\rangle$
 \EndFunction
 \end{algorithmic}
 \end{breakablealgorithm}
@@ -94,11 +93,9 @@
 \end{algorithmic}
 \end{breakablealgorithm}
 
-\subsection{矩阵元素的增、 删、 查、 改}
+\subsection{矩阵元素访问}
 
-稀疏矩阵的元素修改与链表节点的操作直接相关.
-
-\paragraph{随机访问} 算法 \ref{algo_smat_rand_at} 描述了稀疏矩阵的下标 (随机访问) 操作. 该算法中, 对给定坐标的第一次寻址为偏移操作, 仅需要常数时间即可完成; 对给定坐标的第二次寻址为链表查找操作, 最坏情况下则需要遍历整个链表. 假如我们将每行中的非零元数量记为 $n,$ 那么其最坏情况下与平均情况下都需要 $\mathcal{O}(n)$ 的时间进行查找.
+算法 \ref{algo_smat_rand_at} 描述了稀疏矩阵的下标 (随机访问) 操作. 该算法中, 对给定坐标的第一次寻址为偏移操作, 仅需要常数时间即可完成; 对给定坐标的第二次寻址为链表查找操作, 最坏情况下则需要遍历整个链表. 假如我们将每行中的非零元数量记为 $n,$ 那么其最坏情况下与平均情况下都需要 $\mathcal{O}(n)$ 的时间进行查找.
 \begin{breakablealgorithm}
 \caption{稀疏矩阵的随机访问.}
 \label{algo_smat_rand_at}
@@ -138,7 +135,9 @@
 \end{algorithmic}
 \end{breakablealgorithm}
 
-\paragraph{元素删除} 稀疏矩阵中的元素删除等价于将其置为 $0.$ 算法 \ref{algo_smat_remove_along} 是执行删除操作的步骤, 它描述了将待删除节点从某一特定维度上移除的操作, 该算法能在常数时间内执行完毕. 算法 \ref{algo_smat_remove} 则由一次查找和两次移除组成, 它执行包括释放节点占用空间在内的完整删除操作. 它的运行时间由查找的运行时间决定. 
+\subsection{矩阵元素修改}
+
+\paragraph{元素置零} 将稀疏矩阵中的元素置为 $0$ 等价于将其从链表中删除. 算法 \ref{algo_smat_remove_along} 是执行删除操作的步骤, 它描述了将待删除节点从某一特定维度上移除的操作, 该算法能在常数时间内执行完毕. 算法 \ref{algo_smat_remove} 则由一次查找和两次移除组成, 它执行包括释放节点占用空间在内的完整删除操作. 它的运行时间由查找的运行时间决定. 
 \begin{breakablealgorithm}
 \caption{沿稀疏矩阵的某一维度移除元素.}
 \label{algo_smat_remove_along}
@@ -179,14 +178,14 @@
 \end{algorithmic}
 \end{breakablealgorithm}
 
-\paragraph{元素随机插入} 稀疏矩阵中的元素插入等价于将处于该坐标的值设为非零标量. 我们同样分两部分描述插入算法: 算法 \ref{algo_smat_insert_along} 沿指定维度插入非零节点, 算法 \ref{algo_smat_insert} 执行完整的插入操作. 算法 \ref{algo_smat_insert_along} 在最坏情况下需要遍历整个链表才能找到合适的插入位置. 假定插入维度上存在 $n$ 个非零元, 那么它的运行时间为 $\mathcal{O}(n).$ 当该算法发现指定位置已有节点时, 它只是简单的将该已有节点的 $v$ 设为待插入节点的 $v,$ 以避免修改各条边与释放原有节点的时间开销.
+\paragraph{元素赋非零值} 将稀疏矩阵中的零元设为非零值等价于向链表中插入新的节点, 而将非零元素赋值为另一个非零值则仅仅需要覆写原有节点中的卫星数据. 我们分两部分描述元素插入算法: 算法 \ref{algo_smat_set_along} 沿指定维度插入非零节点, 算法 \ref{algo_smat_set} 执行完整的插入操作. 算法 \ref{algo_smat_set_along} 在最坏情况下需要遍历整个链表才能找到合适的插入位置. 假定插入维度上存在 $n$ 个非零元, 那么它的运行时间为 $\mathcal{O}(n).$ 当该算法发现指定位置已有节点时, 它只是简单的将该已有节点的 $v$ 设为待插入节点的 $v,$ 以避免修改各条边与释放原有节点的时间开销.
 \begin{breakablealgorithm}
-\caption{沿稀疏矩阵的某一维度插入元素.}
-\label{algo_smat_insert_along}
+\caption{沿稀疏矩阵的某一维度修改元素.}
+\label{algo_smat_set_along}
 \begin{algorithmic}[1]
 \Require 稀疏矩阵 $M,$ 待插入节点 $n,$ 节点所在维首 $h,$ 插入维度 $d.$
 \Ensure 目标坐标是否已有节点存在.
-\Function{SMatrix-Insert-Along}{$M, n, h, d$}
+\Function{SMatrix-Set-Along}{$M, n, h, d$}
     \If{$h = \Lambda$}
         \State $h \gets n$
         \State $\Prec{n}{d} \gets \Lambda$
@@ -203,13 +202,13 @@
 \end{algorithmic}
 \end{breakablealgorithm}
 
-算法 \ref{algo_smat_insert} 判断所插入的元素是否为零元, 并或者在两个维度上依次调用算法 \ref{algo_smat_inser_along}, 或者调用算法 \ref{algo_smat_remove} 删除零元.
+算法 \ref{algo_smat_set} 判断待修改的目标值是否为零元, 并据此或在两个维度上依次调用算法 \ref{algo_smat_set_along}, 或调用算法 \ref{algo_smat_remove} 删除零元.
 \begin{breakablealgorithm}
-\caption{向稀疏矩阵中插入元素.}
-\label{algo_smat_insert}
+\caption{修改稀疏矩阵中的元素.}
+\label{algo_smat_set}
 \begin{algorithmic}[1]
 \Require 稀疏矩阵 $M,$ 待插入坐标 $P \in \mathbb{Z}_{+}^{2},$ 待插入值 $v.$
-\Procedure{SMatrix-Insert}{$M, P, v$}
+\Procedure{SMatrix-Set}{$M, P, v$}
     \If{$v = 0$}
         \State $\textsc{SMatrix-Remove}(M, P)$
         \State \Return
@@ -229,17 +228,134 @@
 
 \subsection{基础矩阵算术}
 
-在定义了算法 \ref{algo_smat_rand_at} 描述的随机访问操作后, 矩阵算术可以用朴素 (na\"{i}ve) 的逐元素计算法设计. 对于一个 $m \times n$ 列的矩阵而言, 朴素加法、 减法、 转置算法需要计算 $mn$ 个值, 并且进行相同数量的插入操作; 对于两个分别为 $m \times k$ 和 $k \times n$ 的矩阵而言, 朴素矩阵乘法需要计算 $mnk$ 个值, 进行 $mn$ 次插入操作. 显然, 这不是很高效的算法, 尤其是在插入操作本身也需要消耗非常数时间的情况下. 幸运的是, 稀疏矩阵的结构允许我们跳过大部分元素的计算, 从而将计算数量降低至与非零元个数相关, 而不是与矩阵形状相关.
+在定义了算法 \ref{algo_smat_rand_at} 描述的随机访问操作后, 矩阵算术可以用 \textit{朴素} (na\"{i}ve) 的逐元素计算法设计. 对于一个 $m \times n$ 的矩阵而言, 朴素加法、 减法、 转置算法需要计算 $mn$ 个值, 并且进行相同数量的插入操作; 对于两个分别为 $m \times k$ 和 $k \times n$ 的矩阵而言, 朴素矩阵乘法需要计算 $mnk$ 个值, 进行 $mn$ 次插入操作. 显然, 这不是很高效的算法, 尤其是在插入操作本身也需要消耗非常数时间的情况下. 幸运的是, 稀疏矩阵的结构允许我们跳过大部分元素的计算, 从而将计算数量降低至与非零元个数相关, 而不是与矩阵形状相关. 在本节中, 提及元素个数或者矩阵形状时, 带撇号的符号一般代表非零元的个数, 不带撇号的符号一般代表矩阵形状的效果值.
 
+\subsubsection{加法与减法}
 
+由于十字链表的元素在所有维度上均是有序的, 我们可以同时对两个操作数矩阵的目标链表进行遍历. 算法 \ref{algo_smat_add_sub} 实现了矩阵上的运算 $C_{ij} = A_{ij} \circ B_{ij},$ 其中 $\circ$ 是任意标量二元操作. 该算法需要执行插入的次数等于集合 $A, B$ 中不同位置非零元的总数, 远小于朴素算法中的形状分量之积.
+\begin{breakablealgorithm}
+\caption{稀疏矩阵的加法与减法运算.}
+\label{algo_smat_add_sub}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $A, B,$ 标量二元操作 $\circ.$
+\Ensure 逐元素施加操作 $\circ$ 后的结果矩阵.
+\Function{SMatrix-Insert}{$A, B, \circ$}
+    \If{$A.\bm{s} \neq B.\bm{s}$}
+        \State \textbf{error} 参数矩阵形状不符
+    \EndIf
+    \State $C \gets \textsc{SMatrix-New}(A.\bm{s})$
+    \For{$i \gets 0 \hdots A.\bm{s}[0]$}
+        \State $p_A \gets A.\bm{c}[i]$
+        \State $p_B \gets B.\bm{c}[i]$
+        \While{$p_A \neq \Lambda \lor p_B \neq \Lambda$}
+            \If{$p_A \neq \Lambda \land p_B \neq \Lambda$}
+                \State $j_A \gets \Index{p_A}{1}$
+                \State $j_B \gets \Index{p_B}{1}$
+                \If{$j_A < j_B$}
+                    \State $\textsc{SMatrix-Set}(C, (i, j_A), p_A.v \circ 0)$
+                    \State $p_A \gets \Succ{p_A}{1}$
+                \ElsIf{$j_A > j_B$}
+                    \State $\textsc{SMatrix-Set}(C, (i, j_B), 0 \circ p_B.v)$
+                    \State $p_B \gets \Succ{p_B}{1}$
+                \Else
+                    \State $\textsc{SMatrix-Set}(C, (i, j_A), p_A.v \circ p_B.v)$
+                    \State $p_A \gets \Succ{p_A}{1}$
+                    \State $p_B \gets \Succ{p_B}{1}$
+                \EndIf
+            \ElsIf{$p_A = \Lambda$}
+                \State $\textsc{SMatrix-Set}(C, (i, \Index{p_B}{1}), 0 \circ p_B.v)$
+                \State $p_B \gets \Succ{p_B}{1}$
+            \Else
+                \State $\textsc{SMatrix-Set}(C, (i, \Index{p_A}{1}), p_A.v \circ 0)$
+                \State $p_A \gets \Succ{p_A}{1}$
+            \EndIf
+        \EndWhile
+    \EndFor
+    \State \Return $C$
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
 
-\subsection{矩阵转置}
+\subsubsection{乘法}
+
+稀疏矩阵乘法的优化与加减法类似, 如算法 \ref{algo_smat_mul} 所示. 设矩阵 $A$ 中有 $m'$ 个包含非零元素的行, $B$ 中有 $n'$ 个包含非零元素的列, 那么该算法需要执行 $m' n'$ 次插入操作; 计算每个插入的值均需要 $\min\{A\ \text{中该行非零元素数量}, B\ \text{中该列非零元素数量}\}$ 次浮点乘法和加法.
+\begin{breakablealgorithm}
+\caption{稀疏矩阵的乘法.}
+\label{algo_smat_mul}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $A, B.$
+\Ensure 矩阵乘法运算结果.
+\Function{SMatrix-Insert}{$A, B$}
+    \If{$A.\bm{s}[1] \neq B.\bm{s}[0]$}
+        \State \textbf{error} 参数矩阵形状不符
+    \EndIf
+    \State $C \gets \textsc{SMatrix-New}((A.\bm{s}[0], B.\bm{s}[1]))$
+    \For{$i \in \{x \mid x \in 0 \hdots A.\bm{s}[0] \land A.\bm{r}[x] \neq \Lambda\}$}
+        \For{$j \in \{x \mid x \in 0 \hdots B.\bm{s}[1] \land B.\bm{c}[x] \neq \Lambda\}$}
+            \State $p_A \gets A.\bm{r}[i]$
+            \State $p_B \gets B.\bm{c}[j]$
+            \State $s \gets 0$
+            \While{$p_A \neq \Lambda \lor p_B \neq \Lambda$}
+                \If{$p_A \neq \Lambda \land p_B \neq \Lambda$}
+                    \State $k_A \gets \Index{p_A}{1}$
+                    \State $k_B \gets \Index{p_B}{0}$
+                    \If{$k_A = k_B$}
+                        \State $s \gets s + p_A.v \times p_B.v$
+                    \EndIf
+                    \If{}
+                    \EndIf
+                    \If{$k_A \leq k_B$}
+                        \State $p_A \gets \Succ{p_A}{1}$
+                    \EndIf
+                    \If{$k_A \geq k_B$}
+                        \State $p_B \gets \Succ{p_B}{0}$
+                    \EndIf
+                \ElsIf{$p_A \neq \Lambda$}
+                    \State $p_A \gets \Succ{p_A}{1}$
+                \Else
+                    \State $p_B \gets \Succ{p_B}{0}$
+                \EndIf
+            \EndWhile
+            \State $\textsc{SMatrix-Set}(C, (i, j), s)$
+        \EndFor
+    \EndFor
+    \State \Return $C$
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
+
+\subsubsection{矩阵转置}
+
+设输入矩阵的形状为 $m \times n,$ 共有 $k'$ 个非零元, 那么朴素的矩阵转置需要进行 $mn$ 次插入操作. 针对稀疏矩阵的优化方案是将所有非零元的维数对调, 同时重新指派维首数组中存放的边. 这样的优化一共需要 $m + n + \mathcal{O}(k')$ 次边的重新指派. 但是我们可以通过一种称为 “视图” 的技法做到在固定时间内实现效果上的转置. 一个\textit{视图} (view) 可以由三元组 $V = \langle \bm{m}, M \rangle$ 表示, 其中 $M$ 是实际存储数据的稀疏矩阵, 而 $\bm{m}$ 是视图的各维数与 $M$ 中各维数的映射. 对于 $n$ 维下标向量 $\bm{x},$ 视图通过以下规则生效:
+\begin{equation}
+    V[\bm{x}] = M[\bm{x}[\bm{m}[0]], \bm{x}[\bm{m}[1]], \hdots, \bm{x}[\bm{m}[n]]].
+\end{equation}
+
+视图在多种高性能线性代数基础库中被大量运用\cite{bib_numpy}. 当我们不必要创建一个完整的拷贝时, 我们可以用低开销的视图代替逐元素复制, 如算法 \ref{algo_mat_view_t} 所示.
+\begin{breakablealgorithm}
+\caption{稀疏矩阵的转置.}
+\label{algo_mat_view_t}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $M.$
+\Ensure 转置后的矩阵视图.
+\Function{SMatrix-Transpose}{$M$}
+    \State $V \gets$ 新分配的空视图
+    \State $V.M \gets M$
+    \State $V.m \gets (1, 0)$
+    \State \Return $V$
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
 
 \section{实验设计}
 
-TODO.
+\subsection{用户交互}
 
-本实验的源代码获取方式见附录 \ref{appendix_source_code}.
+为了实现用户与稀疏矩阵库的交互, 我们实现了一个简单的控制台交互界面, 允许用户通过文本指令创建、 修改、 显示稀疏矩阵的值, 并计算不包含子表达式的简单矩阵运算表达式.
+
+\subsection{性能测量}
+
+我们以运行时间和内存空间消耗量化稀疏矩阵实现的效率.
 
 \section{结果分析}
 
@@ -251,8 +367,7 @@ TODO.
 
 \begin{thebibliography}{}
 
-\bibitem{bib_ncurses} NCURSES - New Curses \textbf{[OL]}. https://invisible-island.net/ncurses/
-\bibitem{bib_pdcurses} PDCurses - a curses library for environments that don't fit the termcap/terminfo model. \textbf{[OL]}. https://pdcurses.org/
+\bibitem{bib_numpy} Van der Walt, S.; Colbert, S. C.; Varoquaux, G. The NumPy Array: A Structure for Efficient Numerical Computation \textbf{[J]}. \textit{Computing in Science \& Engineering}, 2011, 13(2): 22-30. DOI:\href{https://doi.org/10.1109/MCSE.2011.37}{10.1109/MCSE.2011.37}.
 
 \end{thebibliography}
 

@@ -34,10 +34,7 @@ static lsarith_errno_t LSArith_mat_addsub_(const LSMat_t *restrict a, const LSMa
     for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
         LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
         LSMatCell_t *pb = b->heads[LSMAT_AXIS_0][i].first_cell;
-        if (pa == NULL && pb == NULL) {
-            continue;
-        }
-        while ((pa != NULL || pb != NULL)) {
+        while (pa != NULL || pb != NULL) {
             bool advance_pa = false;
             bool advance_pb = false;
             if (pa != NULL && pb != NULL) {
@@ -90,21 +87,25 @@ lsarith_errno_t LSArith_mat_mul(const LSMat_t *restrict a, const LSMat_t *restri
     }
     LSMat_zero(out);
     for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
+        const LSMatHead_t ha = a->heads[LSMAT_AXIS_0][i];
+        if (ha.first_cell == NULL) {
+            continue;
+        }
         for (size_t j = 0; j < b->shape[LSMAT_AXIS_1]; j++) {
             double sum = 0.0;
-            LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
+            LSMatCell_t *pa = ha.first_cell;
             LSMatCell_t *pb = b->heads[LSMAT_AXIS_1][j].first_cell;
-            while ((pa != NULL || pb != NULL)) {
+            while (pa != NULL || pb != NULL) {
                 bool advance_pa = false;
                 bool advance_pb = false;
                 if (pa != NULL && pb != NULL) {
-                    const size_t ja = LSMatCell_idx_of(pa, LSMAT_AXIS_1);
-                    const size_t jb = LSMatCell_idx_of(pb, LSMAT_AXIS_0);
-                    if (ja == jb) {
+                    const size_t ka = LSMatCell_idx_of(pa, LSMAT_AXIS_1);
+                    const size_t kb = LSMatCell_idx_of(pb, LSMAT_AXIS_0);
+                    if (ka == kb) {
                         sum += pa->v * pb->v;
                     }
-                    advance_pa = ja <= jb;
-                    advance_pb = ja >= jb;
+                    advance_pa = ka <= kb;
+                    advance_pb = ka >= kb;
                 } else {
                     advance_pa = pa != NULL;
                     advance_pb = pb != NULL;
