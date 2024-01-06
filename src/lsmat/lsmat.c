@@ -182,7 +182,7 @@ double LSMat_at(const LSMat_t *restrict mat, size_t i_0, size_t i_1) {
     if (i_0 > mat->shape[LSMAT_AXIS_0] || i_1 > mat->shape[LSMAT_AXIS_1]) {
         return 0.;
     }
-    LSMatCell_t *cell = LSMatHead_cell_at(mat->heads[LSMAT_AXIS_0] + i_0, i_1, 1);
+    LSMatCell_t *cell = LSMatHead_cell_at(mat->heads[LSMAT_AXIS_0] + i_0, i_1, LSMAT_AXIS_1);
     return cell == NULL ? 0. : cell->v;
 }
 
@@ -226,7 +226,7 @@ lsmat_errno_t LSMat_set(LSMat_t *restrict mat, size_t i_0, size_t i_1, double v)
     if (mat == NULL || i_0 >= mat->shape[LSMAT_AXIS_0] || i_1 >= mat->shape[LSMAT_AXIS_1]) {
         return LSMAT_E_GEN;
     }
-    if (v == 0.0) {
+    if (v == 0.) {
         LSMat_set_zero_(mat, i_0, i_1);
     } else {
         LSMat_set_nonzero_(mat, i_0, i_1, v);

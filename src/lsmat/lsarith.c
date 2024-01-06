@@ -92,7 +92,7 @@ lsarith_errno_t LSArith_mat_mul(const LSMat_t *restrict a, const LSMat_t *restri
             continue;
         }
         for (size_t j = 0; j < b->shape[LSMAT_AXIS_1]; j++) {
-            double sum = 0.0;
+            double sum = 0.;
             LSMatCell_t *pa = ha.first_cell;
             LSMatCell_t *pb = b->heads[LSMAT_AXIS_1][j].first_cell;
             while (pa != NULL || pb != NULL) {
@@ -117,7 +117,7 @@ lsarith_errno_t LSArith_mat_mul(const LSMat_t *restrict a, const LSMat_t *restri
                     pb = LSMatCell_succ_of(pb, LSMAT_AXIS_0);
                 }
             }
-            if (sum != 0.0) {
+            if (sum != 0.) {
                 LSMat_set(out, i, j, sum);
             }
         }
