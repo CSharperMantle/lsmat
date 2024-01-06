@@ -498,14 +498,14 @@
 \begin{figure}[H]
     \centering
 \begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto]
-    \node[state, initial] (q_0) {\includegraphics[scale=0.2]{u2757}};
-    \node[state] (q_1) [above right=of q_0] {\includegraphics[scale=0.2]{u2753}};
-    \node[state] (q_2) [below right=of q_1] {\includegraphics[scale=0.2]{u1f44d}};
+    \node[state, initial] (q_0) {\includegraphics[scale=0.2]{u1f9d1_200d_1f4bb}};
+    \node[state] (q_1) [above right=of q_0] {\includegraphics[scale=0.2]{u1f914}};
+    \node[state] (q_2) [below right=of q_1] {\includegraphics[scale=0.2]{u1f50d}};
   
-    \path[->] (q_0) edge node {\includegraphics[scale=0.2]{u1f914}} (q_1)
+    \path[->] (q_0) edge node {\includegraphics[scale=0.2]{u2757}} (q_1)
               (q_1) edge node {\includegraphics[scale=0.2]{u1f4a1}} (q_2)
-                    edge [loop above] node {\includegraphics[scale=0.2]{u1f50d}} ()
-              (q_2) edge node {\includegraphics[scale=0.2]{u1f9d1_200d_1f4bb}} (q_0);
+                    edge [loop above] node {\includegraphics[scale=0.2]{u2753}} ()
+              (q_2) edge node {\includegraphics[scale=0.2]{u1f44d}} (q_0);
 \end{tikzpicture}
 \caption{描述学习计算机科学过程的 DFA. 注意到该 DFA 没有终态, 因为 “学无止境”.}
 \label{fig_learning_process}
