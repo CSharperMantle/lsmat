@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+typedef void (*lsmat_alloc_hook_t)(void *);
+typedef void (*lsmat_free_hook_t)(void *);
+
+extern lsmat_alloc_hook_t lsmat_alloc_hook_;
+extern lsmat_free_hook_t lsmat_free_hook_;
+
 typedef enum lsmat_errno_ {
     LSMAT_OK,
     LSMAT_E_GEN,

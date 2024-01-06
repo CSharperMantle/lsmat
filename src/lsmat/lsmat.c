@@ -6,11 +6,17 @@
 
 #define FREE_NULLIFY_(ptr_)                                                                        \
     do {                                                                                           \
+        if (lsmat_free_hook_ != NULL) {                                                            \
+            lsmat_free_hook_((ptr_));                                                              \
+        }                                                                                          \
         free((ptr_));                                                                              \
         (ptr_) = NULL;                                                                             \
     } while (0)
 
 #define MAP_AXIS_(m_, a_) (m_->axes_mapping[a_])
+
+lsmat_alloc_hook_t lsmat_alloc_hook_ = NULL;
+lsmat_free_hook_t lsmat_free_hook_ = NULL;
 
 size_t LSMatCell_idx_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis) {
     return cell != NULL ? cell->axes[axis % LSMAT_AXIS_COUNT_].i : SIZE_MAX;
@@ -37,6 +43,9 @@ lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t axis) {
     head->first_cell = NULL;
     while (p != NULL) {
         LSMatCell_t *t = LSMatCell_succ_of(p, axis);
+        if (lsmat_free_hook_ != NULL) {
+            lsmat_free_hook_(p);
+        }
         free(p);
         p = t;
     }
@@ -139,6 +148,11 @@ LSMat_t *LSMat_new(size_t shape_0, size_t shape_1) {
     // thus we skip it.
     mat->heads[LSMAT_AXIS_0] = calloc(shape_0, sizeof(LSMatHead_t));
     mat->heads[LSMAT_AXIS_1] = calloc(shape_1, sizeof(LSMatHead_t));
+    if (lsmat_alloc_hook_ != NULL) {
+        lsmat_alloc_hook_(mat);
+        lsmat_alloc_hook_(mat->heads[LSMAT_AXIS_0]);
+        lsmat_alloc_hook_(mat->heads[LSMAT_AXIS_1]);
+    }
     return mat;
 }
 
@@ -154,6 +168,9 @@ lsmat_errno_t LSMat_free(LSMat_t *restrict mat) {
     // thus we skip freeing the columns.
     FREE_NULLIFY_(mat->heads[LSMAT_AXIS_1]);
     memset(mat->shape, 0, sizeof(mat->shape));
+    if (lsmat_free_hook_ != NULL) {
+        lsmat_free_hook_(mat);
+    }
     free(mat);
     return LSMAT_OK;
 }
@@ -173,6 +190,9 @@ static void LSMat_set_nonzero_(LSMat_t *restrict mat, size_t i_0, size_t i_1, do
     LSMatHead_t *const head_0 = mat->heads[LSMAT_AXIS_0] + i_0;
     LSMatHead_t *const head_1 = mat->heads[LSMAT_AXIS_1] + i_1;
     LSMatCell_t *new_cell = calloc(1, sizeof(LSMatCell_t));
+    if (lsmat_alloc_hook_ != NULL) {
+        lsmat_alloc_hook_(new_cell);
+    }
     new_cell->axes[LSMAT_AXIS_0].i = i_0;
     new_cell->axes[LSMAT_AXIS_1].i = i_1;
     new_cell->v = v;
@@ -180,6 +200,9 @@ static void LSMat_set_nonzero_(LSMat_t *restrict mat, size_t i_0, size_t i_1, do
     if (LSMatHead_insert(head_0, new_cell, LSMAT_AXIS_1, &dup) == LSMAT_E_DUP ||
         LSMatHead_insert(head_1, new_cell, LSMAT_AXIS_0, &dup) == LSMAT_E_DUP) {
         dup->v = v;
+        if (lsmat_free_hook_ != NULL) {
+            lsmat_free_hook_(new_cell);
+        }
         free(new_cell);
     }
 }
@@ -193,6 +216,9 @@ static void LSMat_set_zero_(LSMat_t *restrict mat, size_t i_0, size_t i_1) {
     }
     LSMatHead_remove(head_0, cell, LSMAT_AXIS_1);
     LSMatHead_remove(head_1, cell, LSMAT_AXIS_0);
+    if (lsmat_free_hook_ != NULL) {
+        lsmat_free_hook_(cell);
+    }
     free(cell);
 }
 
