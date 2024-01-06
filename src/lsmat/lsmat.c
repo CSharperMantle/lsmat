@@ -32,19 +32,6 @@ LSMatCell_t **LSMatCell_ref_prec_of(LSMatCell_t *restrict cell, lsmat_axis_t axi
     return cell != NULL ? &cell->axes[axis % LSMAT_AXIS_COUNT_].prev : NULL;
 }
 
-double LSMatCell_find_cont(LSMatCell_t **restrict cell, size_t i, lsmat_axis_t axis) {
-    LSMatCell_t *cell_ = NULL;
-    if (cell == NULL || (cell_ = *cell) == NULL) {
-        return 0.;
-    }
-    LSMatCell_t *succ = LSMatCell_succ_of(cell_, axis);
-    if (cell_->axes[axis].i == i) {
-        *cell = succ;
-        return cell_->v;
-    }
-    return 0.;
-}
-
 lsmat_errno_t LSMatHead_destroy(LSMatHead_t *restrict head, lsmat_axis_t axis) {
     LSMatCell_t *p = head->first_cell;
     head->first_cell = NULL;
