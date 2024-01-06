@@ -20,6 +20,8 @@
 
 在本次实践作业中, 需要基于十字链表实现对稀疏矩阵的创建, 储存和加法, 减法, 乘法, 转置等运算操作, 也可以自行添加新的数据导入导出, 矩阵运算等操作. 其中至少需要实现稀疏矩阵的创建和输入输出, 加法, 减法, 乘法和转置操作, 并给出相应算法的复杂度分析. 对于运算操作中可能出现的错误如尺寸不匹配, 不可逆 (若实现了求逆操作) 等情况, 需要能够捕获错误并提示. 在代码实现过程中还需要避免可能发生的内存泄漏.
 
+本报告中附有针对 2023-2024 学年第一学期 “程序设计与算法基础” 课程的思政报告, 见附录 \ref{appendix_ideology}.
+
 \section{主要算法}
 
 \subsection{数据结构描述}
@@ -351,15 +353,41 @@
 
 \subsection{用户交互}
 
-为了实现用户与稀疏矩阵库的交互, 我们实现了一个简单的控制台交互界面, 允许用户通过文本指令创建、 修改、 显示稀疏矩阵的值, 并计算不包含子表达式的简单矩阵运算表达式.
+为了实现用户与稀疏矩阵库的交互, 我们实现了一个简单的控制台交互界面, 如图 \ref{fig_screenshot_cli} 所示. 它允许用户通过文本指令创建、 修改、 显示稀疏矩阵, 并计算简单的矩阵运算表达式.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{cli_screenshot}
+    \caption{\texttt{lsmat\_cli} 用户交互界面某一次运行的终端截图}
+    \label{fig_screenshot_cli}
+\end{figure}
 
 \subsection{性能测量}
 
-我们以运行时间和内存空间消耗量化稀疏矩阵实现的效率.
+我们以运行时间和内存空间消耗量化稀疏矩阵实现的效率. 我们在上述控制台交互界面中加入计时功能, 测量用户每一条指令执行的时间消耗. 我们通过在稀疏矩阵库中的每一次内存分配时加入可选的钩子函数调用, 以统计内存分配情况.
 
 \section{结果分析}
 
-TODO.
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.7]{lsmat_plot_mem_zero}
+    \caption{稀疏矩阵与稠密数组存储全零矩阵的内存占用对比}
+    \label{fig_lsmat_plot_mem_zero}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.7]{lsmat_plot_mem_identity}
+    \caption{稀疏矩阵与稠密数组存储单位阵的内存占用对比}
+    \label{fig_lsmat_plot_mem_identity}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.7]{lsmat_plot_mem_halfzero}
+    \caption{稀疏矩阵与稠密数组存储一半元素非零矩阵阵的内存占用对比}
+    \label{fig_lsmat_plot_mem_halfzero}
+\end{figure}
 
 \section{小结}
 
@@ -399,5 +427,6 @@ TODO.
 本项目代码可于 \url{https://github.com/CSharperMantle/lsmat} 获取, 并在 BSD 3-Clause 许可证的条件与条款下使用. 授权协议的具体信息见上述 URL.
 
 \section{附录: 课程思政报告}
+\label{appendix_ideology}
 
 TODO.

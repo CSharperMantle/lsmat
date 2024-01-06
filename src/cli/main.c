@@ -571,6 +571,10 @@ static cmd_errno_t main_loop(void) {
     timespec_t diff;
     char *buf_input = readline_gets("lsmat_cli > ");
 
+    if (strlen(buf_input) == 0) {
+        return CONT_OK;
+    }
+
     const char *cmd_str = strtok(buf_input, " ");
     cmd_errno_t e = QUIT;
     for (size_t i = 0; i < ARR_LIT_LEN_(CMDS); i++) {
