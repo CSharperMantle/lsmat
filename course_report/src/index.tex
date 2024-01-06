@@ -405,7 +405,7 @@
     \label{fig_lsmat_plot_percent_vs_mem_25by25}
 \end{figure}
 
-\subsection{稀疏矩阵适用性的定量分析}
+\subsection{稀疏矩阵的定量最优化}
 
 由于我们所对比的两种数据结构均有完整的定义, 我们能够计算出其精确的内存消耗. 我们不妨设待存储矩阵形状为 $m \times n,$ 其中每个元素占据空间为 $E.$ 矩阵稠密度 $d$ 的含义为该矩阵中有 $\lfloor mnd \rfloor$ 个非零元素. 我们不对这些元素的空间排列做任何假设. 同时, 根据计算机中常常使用指针表示有向边, 我们规定每个指针占据 $P$ 大小的空间. 为了方便起见, 我们假设长度、 下标等元数据标量均同样占据 $P$ 的空间.
 
@@ -491,4 +491,28 @@
 \section{附录: 课程思政报告}
 \label{appendix_ideology}
 
-TODO.
+在大一的计算机基础课程中, 我学习了 “程序设计与算法基础” 这门课程, 内容涵盖了C语言基本语法、基础数据结构与基础算法等. 由于我在进入大学之前已经具有了一定的程序设计经验, 所以这门课的对我而言相对轻松, 但我仍然在课上找到了自己知识点的漏洞, 及时查漏补缺. 同时, 通过课后作业与专题任务使我对课程内容乃至计算机科学学科的理解得到进一步深化.
+
+在这门课程中, 我不仅学到了具体的编程技能, 还开始掌握更为关键的 “发现问题-思考问题-解决问题” 的科学探究方法, 如图 \ref{fig_learning_process} 所示. 我认识到计算机科学不仅仅是一门兼具具体与抽象的学科, 更是一套与社会和人类思考密切相关的方法论. 在学习的过程中, 我逐渐认识到科技的发展对社会的推动作用, 计算机专业不仅仅是一种技能的学习, 更是对思维方式和创新能力的培养.
+
+\begin{figure}[H]
+    \centering
+\begin{tikzpicture}[shorten >=1pt,node distance=3cm,on grid,auto]
+    \node[state, initial] (q_0) {\includegraphics[scale=0.2]{u2757}};
+    \node[state] (q_1) [above right=of q_0] {\includegraphics[scale=0.2]{u2753}};
+    \node[state] (q_2) [below right=of q_1] {\includegraphics[scale=0.2]{u1f44d}};
+  
+    \path[->] (q_0) edge node {\includegraphics[scale=0.2]{u1f914}} (q_1)
+              (q_1) edge node {\includegraphics[scale=0.2]{u1f4a1}} (q_2)
+                    edge [loop above] node {\includegraphics[scale=0.2]{u1f50d}} ()
+              (q_2) edge node {\includegraphics[scale=0.2]{u1f9d1_200d_1f4bb}} (q_0);
+\end{tikzpicture}
+\caption{描述学习计算机科学过程的 DFA. 注意到该 DFA 没有终态, 因为 “学无止境”.}
+\label{fig_learning_process}
+\end{figure}
+
+未来, 我将以更加积极的态度投入到计算机科学的学习中. 我将始终以提升自我、 追求卓越为宗旨, 根据培养计划进一步学习高级算法与数据结构, 深入研究计算机网络、OS 等领域的知识. 同时, 我也将积极参与到网络安全等应用课题中, 通过实践不断提升自己的编程水平和计算机理论与应用素养.
+
+至于这门课程本身, 我认为可以在后续的教学中提升难度, 更注重较新的语言特性在实际项目中的应用. 同时, 我认为本课程在促进学生间合作方面还可以再进一步: 目前的项目都由学生独立完成, 学生很难在缺少外部反馈的情况下对自己的编码风格做出恰当的调整. 我认为鼓励学生适时参加开源软件贡献活动十分重要: 或测试, 或修补错误, 或贡献文档, 或解答疑问; 这些都是让学生从他人观照自我, 提升合作能力与工程能力的宝贵机会.
+
+最后, 感谢李卫民老师和黄孝喜老师一学期的辛勤付出, 感谢两位助教和 \href{https://github.com/woshiluo}{woshiluo}、 \href{https://github.com/isaunoya}{isaunoya} 等同学一学期来的无私帮助, 遇到你们是我的荣幸.
