@@ -305,18 +305,19 @@
                     \If{$k_A = k_B$}
                         \State $s \gets s + p_A.v \times p_B.v$
                     \EndIf
-                    \If{}
-                    \EndIf
                     \If{$k_A \leq k_B$}
                         \State $p_A \gets \Succ{p_A}{1}$
                     \EndIf
                     \If{$k_A \geq k_B$}
                         \State $p_B \gets \Succ{p_B}{0}$
                     \EndIf
-                \ElsIf{$p_A \neq \Lambda$}
-                    \State $p_A \gets \Succ{p_A}{1}$
                 \Else
-                    \State $p_B \gets \Succ{p_B}{0}$
+                    \If{$k_A \neq \Lambda$}
+                        \State $p_A \gets \Succ{p_A}{1}$
+                    \EndIf
+                    \If{$k_B \neq \Lambda$}
+                        \State $p_B \gets \Succ{p_B}{0}$
+                    \EndIf
                 \EndIf
             \EndWhile
             \State $\textsc{SMatrix-Set}(C, (i, j), s)$
