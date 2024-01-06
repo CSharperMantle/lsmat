@@ -1,23 +1,18 @@
-\renewcommand\contentsname{\textcolor{xblue}{目录}}
-    \tableofcontents
-\clearpage
-\setcounter{page}{1}
-
 \section{问题描述}
 
 稀疏矩阵 (sparse matrix), 在数值分析中, 是其元素大部分为零的矩阵. 反之, 如果大部分元素都非零, 则这个矩阵是稠密 (dense) 的. 在科学与工程领域中求解线性模型时经常出现大型的稀疏矩阵.
 
 在使用计算机存储和操作稀疏矩阵时, 经常需要修改标准算法以利用矩阵的稀疏结构. 由于其自身的稀疏特性, 通过压缩可以大大节省稀疏矩阵的内存代价. 更为重要的是, 由于过大的尺寸, 标准的算法经常无法操作这些稀疏矩阵.
 
-如 \ref{eq_1_smat_example} 所示为一个 $5 \times 5$ 的稀疏矩阵, 其中只有四个元素为非零值. 为了清楚起见, 零用点表示.
+式 \ref{eq_1_smat_example} 描述了一个 $5 \times 5$ 的稀疏矩阵, 其中只有四个元素为非零值. 为了清楚起见, 零用点表示.
 \begin{equation}
     \begin{bmatrix}
-        . & 1 & . & . & . \\
-        . & . & . & . & . \\
-        . & . & . & 2 & . \\
-        . & 3 & . & . & . \\
-        . & . & . & 4 & . \\
-    \end{bmatrix}.
+        \cdot & 1 & \cdot & \cdot & \cdot \\
+        \cdot & \cdot & \cdot & \cdot & \cdot \\
+        \cdot & \cdot & \cdot & 2 & \cdot \\
+        \cdot & 3 & \cdot & \cdot & \cdot \\
+        \cdot & \cdot & \cdot & 4 & \cdot \\
+    \end{bmatrix}
     \label{eq_1_smat_example}
 \end{equation}
 
@@ -29,66 +24,220 @@
 
 \subsection{数据结构描述}
 
-一个完整的十字链表可以表示为三元组 $M = \left\langle \bm{r}, \bm{c}, N\right\rangle,$ 其中各分量分别表示行首数组、 列首数组和数据节点集合. 对于矩阵中的所有非零元, 存在 $n \in N,$ 且每个 $n = \left\langle v, \bm{a} \right\rangle,$ 其中 $\bm{a}$ 为各维度上的坐标与邻接信息数组, 每个 $\bm{a}$ 的分量都可以表示为三元组 $\bm{a}[j] = \left\langle i \in \mathbb{Z}_+, prev \in N, next \in N\right\rangle,$ 分别为该元素在该维度中的下标、 前驱和后继. 对于每个存在非零元的行或列, 其行、 列首数组的相应位置存在指向该行或列的首个非零元素的一条边.
+一个完整的十字链表可以表示为四元组 $M = \left\langle \bm{s} \in \mathbb{Z}_{+}^{2}, \bm{r}, \bm{c} \right\rangle,$ 其中各分量分别表示形状、 行首数组、 列首数组和数据节点集合. 对于矩阵中的所有非零元, 存在 $n = \left\langle v, \bm{a} \right\rangle,$ 其中 $\bm{a}$ 为各维度上的坐标与邻接信息数组, 每个 $\bm{a}$ 的分量都可以表示为三元组 $\bm{a}[j] = \left\langle i \in \mathbb{Z}_+, prev, next\right\rangle,$ 分别为该元素在该维度中的下标、 前驱和后继. 对于每个存在非零元的行或列, 其行、 列首数组的相应位置存在指向该行或列的首个非零元素的一条边. 所有分量均由 0 开始标号.
+
+在本文中, 当遇到不指向任何有意义节点的边时, 我们使用 $\Lambda$ 表示该边. 实际上, 在算法实现中, 我们使用特殊指针值 \texttt{NULL} 实现 $\Lambda.$
+
+\newcommand{\Prec}[2]{\mathsf{Prec}(#1, #2)}
+\newcommand{\Succ}[2]{\mathsf{Succ}(#1, #2)}
+\newcommand{\Index}[2]{\mathsf{Index}(#1, #2)}
+为方便讨论, 我们引入表示十字链表中节点 $n$ 在 $d$ 维方向的前驱、 后继与下标的记号:
+\begin{equation}
+    \begin{aligned}
+        \Prec{n}{d} & = n.\bm{a}[d].prev\\
+        \Succ{n}{d} & = n.\bm{a}[d].next\\
+        \Index{n}{d} & = n.\bm{a}[d].i\\
+    \end{aligned}
+\end{equation}
+
+\newcommand{\Elems}[2]{\mathsf{Elems}(#1, #2)}
+对于十字链表中的每一维度 $d,$ 我们定义记号 $\Elems{\cdot}{\cdot}$ 表示该链表上的所有元素集合:
+\begin{equation}
+    \Elems{n}{d} = \begin{cases}
+        \emptyset & \text{if}\ n = \Lambda,\\
+        \left\{n\right\} \cup \Elems{\Succ{n}{d}}{d} & \text{otherwise}.\\
+    \end{cases}
+\end{equation}
+
+\newcommand{\Nodes}[1]{\mathsf{Nodes}(#1)}
+基于上述定义, 我们不难定义记号 $\Nodes{\cdot}$ 表示稀疏矩阵中的所有链表节点的集合:
+\begin{equation}
+    \Nodes{M} = \bigcup_{h \in M.\bm{r}} \Elems{h}{1}.
+\end{equation}
 
 \subsection{矩阵建立与销毁}
 
-算法 \ref{algo_smat_init} 给出了创建一个具有给定形状 $\bm{s} \in \mathbb{R}^2$ 且元素全为 0 的系数矩阵的过程. 不难发现, 基于十字链表的稀疏矩阵在创建时并不需要为任何元素分配实际的存储空间. 实际实现中, 创建时的内存开销主要集中于为 $\bm{r}$ 和 $\bm{c}$ 所分配的空间上.
-
+算法 \ref{algo_smat_new} 给出了创建一个具有给定形状 $\bm{s} \in \mathbb{R}^2$ 且元素全为 0 的系数矩阵的过程. 不难发现, 基于十字链表的稀疏矩阵在创建时并不需要为任何元素分配实际的存储空间. 实际实现中, 创建时的内存开销主要集中于为 $\bm{r}$ 和 $\bm{c}$ 所分配的空间上. 若不考虑空间分配的时间, 该算法可以在 $\mathcal{O}(1)$ 时间内完成.
 \begin{breakablealgorithm}
 \caption{创建稀疏矩阵.}
-\label{algo_smat_init}
+\label{algo_smat_new}
 \begin{algorithmic}[1]
-\Require 矩阵形状 $\bm{s} \in \mathbb{R}^2$.
+\Require 矩阵形状 $\bm{s} \in \mathbb{R}^2.$
 \Ensure 指定形状的全零矩阵.
-\Function{SMatrixInit}{$\bm{s}$}
-    \State $\bm{r} \gets$ 长度为 $\bm{s}[0]$ 的空数组 
-    \State $\bm{c} \gets$ 长度为 $\bm{s}[0]$ 的空数组
+\Function{SMatrix-New}{$\bm{s}$}
+    \State $\bm{r} \gets$ 长度为 $\bm{s}[0]$ 的数组, 元素全为 $\Lambda$
+    \State $\bm{c} \gets$ 长度为 $\bm{s}[1]$ 的数组, 元素全为 $\Lambda$
     \State $N \gets \emptyset$
-    \State \Return $\left\langle \bm{r}, \bm{c}, N\right\rangle$
+    \State \Return $\left\langle \bm{s}, \bm{r}, \bm{c}, N\right\rangle$
 \EndFunction
 \end{algorithmic}
 \end{breakablealgorithm}
 
-算法 \ref{algo_maze_explore} 描述了利用回溯法实现的迷宫探索. 同样, 我们记 $\mathsf{Push}(\cdot, \cdot)$ 与 $\mathsf{Pop}(\cdot)$ 为压入与弹出操作, $\mathsf{Empty}(\cdot)$ 为判断栈是否为空的操作, $\mathsf{Top}(\cdot)$ 为获取栈顶元素的操作.
-
+算法 \ref{algo_smat_free} 给出了释放一个稀疏矩阵的过程. 在二维稀疏矩阵中, 显然, 我们只需要对沿其中一个维度进行元素释放, 便可以完全释放所有数据节点. 该算法需要遍历所有非零节点, 依次对其进行释放操作. 设矩阵中共有 $n$ 个非零元素, 那么该算法需要 $\mathcal{O}(n)$ 的运行时间.
 \begin{breakablealgorithm}
-\caption{回溯法迷宫探索.}
-\label{algo_maze_explore}
+\caption{释放稀疏矩阵.}
+\label{algo_smat_free}
 \begin{algorithmic}[1]
-\Require 迷宫 $M.$
-\Ensure 是否能够找到一条可行路线.
-\State 初始化栈 $s$
-\State $P \gets \mathrm{NULL}$
-\State $\mathsf{Push}(s, \text{初始坐标})$
-\While{$\lnot \mathsf{Empty}(s)$}
-    \State $P \gets \mathsf{Top}(s)$
-    \State 标记 $P$ 为已探索过的道路
-    \For{$P' \gets \{ P\ \text{的右、 左、 上、 下方坐标}\}$}
-        \If{$P'$ 在迷宫内部, 且为未探索过的道路}
-            \State $\mathsf{Push}(s, P')$
-            \State 跳过剩余检测, 继续 \textbf{while} 循环的下一迭代
-        \EndIf
+\Require 稀疏矩阵 $M$.
+\Procedure{SMatrix-Free}{$M$}
+    \For{$h \in \{ r \mid r \in M.\bm{r} \land r \neq \Lambda \}$}
+        \State $p \gets r$
+        \While{$p \neq \Lambda$}
+            \State $t \gets \Succ{p}{1}$
+            \State 释放 $p$ 的空间
+            \State $p \gets t$
+        \EndWhile
     \EndFor
-    \State $\mathsf{Pop}(s)$
-\EndWhile
-\If{$P$ 为终点}
-    \State \Return 能够找到一条可行路线
-\Else
-    \State \Return 无法找到一条可行路线
-\EndIf
+    \State $M.\bm{s} \gets (0, 0)$
+    \State 释放 $M$ 及其所有分量的空间
+\EndProcedure
 \end{algorithmic}
 \end{breakablealgorithm}
 
 \subsection{矩阵元素的增、 删、 查、 改}
 
-\subsection{顺序访问优化}
+稀疏矩阵的元素修改与链表节点的操作直接相关.
+
+\paragraph{随机访问} 算法 \ref{algo_smat_rand_at} 描述了稀疏矩阵的下标 (随机访问) 操作. 该算法中, 对给定坐标的第一次寻址为偏移操作, 仅需要常数时间即可完成; 对给定坐标的第二次寻址为链表查找操作, 最坏情况下则需要遍历整个链表. 假如我们将每行中的非零元数量记为 $n,$ 那么其最坏情况下与平均情况下都需要 $\mathcal{O}(n)$ 的时间进行查找.
+\begin{breakablealgorithm}
+\caption{稀疏矩阵的随机访问.}
+\label{algo_smat_rand_at}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $M,$ 待查坐标 $P \in \mathbb{Z}_{+}^{2}.$
+\Ensure 位于该坐标处的元素 $n$ 与其值 $v.$
+\Function{SMatrix-Random-At}{$M, P$}
+    \State $p \gets M.\bm{r}[P[0]]$
+    \While{$p \neq \Lambda$}
+        \If{$P[1] = \Index{p}{1}$}
+            \State \Return $\left\langle n=p; v=p.v \right\rangle$
+        \EndIf
+        \State $p \gets \Succ{p}{1}$
+    \EndWhile
+    \State \Return $\left\langle n=\Lambda; v=0 \right\rangle$
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
+
+\paragraph{特定于顺序访问的优化} 很多情况下, 对矩阵元素的查找具有空间局部性, 即所查找下标中仅有少数几个维度分量变化较快. 假如我们使用 \textsc{SMatrix-Random-At} 在二维稀疏矩阵中对一整列或一整行进行顺序访问, 我们将观察到相当不理想的性能表现, 因为在该过程中需要进行 $(n^2 + n) / 2$ 次后继操作, 并没有充分利用有序访问的局部性特征. 算法 \ref{algo_smat_cont_at} 仅适用于有序的查找需求, 且对调用方式有更严格的规定, 但是它与算法 \ref{algo_smat_rand_at} 相比有显著的性能优势: 仅需要调用 $n$ 次即可搜索整个指定维度.
+\begin{breakablealgorithm}
+\caption{稀疏矩阵的迭代式顺序访问.}
+\label{algo_smat_cont_at}
+\begin{algorithmic}[1]
+\Require 当前矩阵数据元素 $n,$ 待搜索的下标 $i,$ 待搜索的维度序号 $d.$
+\Ensure 该坐标处的元素值 $v,$ 更新后的当前元素 $n'.$
+\Function{SMatrix-Continuous-At}{$n, i, d$}
+    \If{$n = \Lambda$}
+        \State \Return $v=0; n'=\Lambda$
+    \EndIf
+    \State $p \gets \Succ{n}{d}$
+    \If{$\Index{n}{d} = i$}
+        \State \Return $\left\langle v=n.v; n'=p \right\rangle$
+    \EndIf
+    \State \Return $\left\langle v=0; n'=n \right\rangle$
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
+
+\paragraph{元素删除} 稀疏矩阵中的元素删除等价于将其置为 $0.$ 算法 \ref{algo_smat_remove_along} 是执行删除操作的步骤, 它描述了将待删除节点从某一特定维度上移除的操作, 该算法能在常数时间内执行完毕. 算法 \ref{algo_smat_remove} 则由一次查找和两次移除组成, 它执行包括释放节点占用空间在内的完整删除操作. 它的运行时间由查找的运行时间决定. 
+\begin{breakablealgorithm}
+\caption{沿稀疏矩阵的某一维度移除元素.}
+\label{algo_smat_remove_along}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $M,$ 待删除节点 $n,$ 删除维度 $d.$
+\Ensure 节点所在维首的更新值.
+\Function{SMatrix-Remove-Along}{$M, n, d$}
+    \State $n \gets$ 
+    \State $prec \gets \Prec{n}{d}$
+    \State $succ \gets \Succ{n}{d}$
+    \If{$succ \neq \Lambda$}
+        \State $\Prec{succ}{d} \gets prec$
+        \State $\Succ{n}{d} \gets \Lambda$
+    \EndIf
+    \If{$prec \neq \Lambda$}
+        \State $\Succ{prec}{d} \gets succ$
+        \State $\Prec{n}{d} \gets \Lambda$
+    \Else
+        \State \Return $succ$
+    \EndIf
+    \State \Return 不需要更新节点所在维首
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
+
+\begin{breakablealgorithm}
+\caption{移除稀疏矩阵元素.}
+\label{algo_smat_remove}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $M,$ 待删除节点坐标 $P.$
+\Procedure{SMatrix-Remove}{$M, P$}
+    \State $\left\langle n, *\right\rangle \gets \textsc{SMatrix-Random-At}(M, P)$
+    \State $\textsc{SMatrix-Remove-Along}(M, n, 0)$
+    \State $\textsc{SMatrix-Remove-Along}(M, n, 1)$
+    \State $M.N \gets M.N \setminus \{n\}$
+    \State 释放 $n$ 的空间
+\EndProcedure
+\end{algorithmic}
+\end{breakablealgorithm}
+
+\paragraph{元素随机插入} 稀疏矩阵中的元素插入等价于将处于该坐标的值设为非零标量. 我们同样分两部分描述插入算法: 算法 \ref{algo_smat_insert_along} 沿指定维度插入非零节点, 算法 \ref{algo_smat_insert} 执行完整的插入操作. 算法 \ref{algo_smat_insert_along} 在最坏情况下需要遍历整个链表才能找到合适的插入位置. 假定插入维度上存在 $n$ 个非零元, 那么它的运行时间为 $\mathcal{O}(n).$ 当该算法发现指定位置已有节点时, 它只是简单的将该已有节点的 $v$ 设为待插入节点的 $v,$ 以避免修改各条边与释放原有节点的时间开销.
+\begin{breakablealgorithm}
+\caption{沿稀疏矩阵的某一维度插入元素.}
+\label{algo_smat_insert_along}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $M,$ 待插入节点 $n,$ 节点所在维首 $h,$ 插入维度 $d.$
+\Ensure 目标坐标是否已有节点存在.
+\Function{SMatrix-Insert-Along}{$M, n, h, d$}
+    \If{$h = \Lambda$}
+        \State $h \gets n$
+        \State $\Prec{n}{d} \gets \Lambda$
+        \State $\Succ{n}{d} \gets \Lambda$
+        \State \Return \textbf{false}
+    \EndIf
+    \If{$\exists p \in \Elems{h}{d} \mid \Index{p}{d} = \Index{n}{d}$}
+        \State $p.v \gets n.v$
+        \State \Return \textbf{true}
+    \EndIf
+    \State 插入 $n$ 使其满足 $\Index{\Prec{n}{d}}{d} < \Index{n}{d} < \Index{\Succ{n}{d}}{d}$
+    \State \Return \textbf{false}
+\EndFunction
+\end{algorithmic}
+\end{breakablealgorithm}
+
+算法 \ref{algo_smat_insert} 判断所插入的元素是否为零元, 并或者在两个维度上依次调用算法 \ref{algo_smat_inser_along}, 或者调用算法 \ref{algo_smat_remove} 删除零元.
+\begin{breakablealgorithm}
+\caption{向稀疏矩阵中插入元素.}
+\label{algo_smat_insert}
+\begin{algorithmic}[1]
+\Require 稀疏矩阵 $M,$ 待插入坐标 $P \in \mathbb{Z}_{+}^{2},$ 待插入值 $v.$
+\Procedure{SMatrix-Insert}{$M, P, v$}
+    \If{$v = 0$}
+        \State $\textsc{SMatrix-Remove}(M, P)$
+        \State \Return
+    \EndIf
+    \State $h_r \gets M.\bm{r}[P[0]]$
+    \State $h_c \gets M.\bm{c}[P[1]]$
+    \State $n \gets$ 新分配的空节点
+    \State $\Index{n}{0} \gets P[0]$
+    \State $\Index{n}{1} \gets P[1]$
+    \State $d \gets \textsc{SMatrix-Insert-Along}(M, n, h_r, 1) \lor \textsc{SMatrix-Insert-Along}(M, n, h_c, 0)$
+    \If{$d$}
+        \State 释放 $n$
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{breakablealgorithm}
 
 \subsection{基础矩阵算术}
+
+在定义了算法 \ref{algo_smat_rand_at} 描述的随机访问操作后, 矩阵算术可以用朴素 (na\"{i}ve) 的逐元素计算法设计. 对于一个 $m \times n$ 列的矩阵而言, 朴素加法、 减法、 转置算法需要计算 $mn$ 个值, 并且进行相同数量的插入操作; 对于两个分别为 $m \times k$ 和 $k \times n$ 的矩阵而言, 朴素矩阵乘法需要计算 $mnk$ 个值, 进行 $mn$ 次插入操作. 显然, 这不是很高效的算法, 尤其是在插入操作本身也需要消耗非常数时间的情况下. 幸运的是, 稀疏矩阵的结构允许我们跳过大部分元素的计算, 从而将计算数量降低至与非零元个数相关, 而不是与矩阵形状相关.
+
+
 
 \subsection{矩阵转置}
 
 \section{实验设计}
+
+TODO.
 
 本实验的源代码获取方式见附录 \ref{appendix_source_code}.
 
@@ -98,7 +247,7 @@ TODO.
 
 \section{小结}
 
-本文实现了迭代快速排序和回溯法迷宫探索两种算法, 并以可交互的形式对后者结果进行展示.  实验中, 作者对递归与试探回溯的原理有了更深刻的理解, 对如何便捷地通过控制台与用户进行图形化交互也有了更深入的了解.
+TODO.
 
 \begin{thebibliography}{}
 
@@ -133,3 +282,7 @@ TODO.
 \label{appendix_source_code}
 
 本项目代码可于 \url{https://github.com/CSharperMantle/lsmat} 获取, 并在 BSD 3-Clause 许可证的条件与条款下使用. 授权协议的具体信息见上述 URL.
+
+\section{附录: 课程思政报告}
+
+TODO.

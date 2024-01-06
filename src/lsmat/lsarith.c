@@ -25,53 +25,36 @@ static lsarith_errno_t LSArith_mat_is_same_shape_3_(const LSMat_t *const restric
                : LSARITH_E_SHAPE;
 }
 
-static double LSArith_cell_find_cont_(LSMatCell_t **restrict cell, size_t i, lsmat_axis_t axis) {
-    LSMatCell_t *cell_ = NULL;
-    if (cell == NULL || (cell_ = *cell) == NULL) {
-        return 0.;
+static lsarith_errno_t LSArith_mat_addsub_(const LSMat_t *restrict a, const LSMat_t *restrict b,
+                                           LSMat_t *restrict out, bool sub) {
+    if (LSArith_mat_is_same_shape_3_(a, b, out) != LSARITH_OK) {
+        return LSARITH_E_SHAPE;
     }
-    LSMatCell_t *succ = LSMatCell_succ_of(cell_, axis);
-    if (cell_->axes[axis].i == i) {
-        *cell = succ;
-        return cell_->v;
+    LSMat_zero(out);
+    for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
+        LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
+        LSMatCell_t *pb = b->heads[LSMAT_AXIS_0][i].first_cell;
+        if (pa == NULL && pb == NULL) {
+            continue;
+        }
+        size_t j = 0;
+        while ((pa != NULL || pb != NULL) && j < a->shape[LSMAT_AXIS_1]) {
+            double va = LSMatCell_find_cont(&pa, j, LSMAT_AXIS_1);
+            double vb = LSMatCell_find_cont(&pb, j, LSMAT_AXIS_1);
+            LSMat_set(out, i, j, sub ? va - vb : va + vb);
+        }
     }
-    return 0.;
+    return LSARITH_OK;
 }
 
 lsarith_errno_t LSArith_mat_add(const LSMat_t *restrict a, const LSMat_t *restrict b,
                                 LSMat_t *restrict out) {
-    if (LSArith_mat_is_same_shape_3_(a, b, out) != LSARITH_OK) {
-        return LSARITH_E_SHAPE;
-    }
-    LSMat_zero(out);
-    for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
-        LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
-        LSMatCell_t *pb = b->heads[LSMAT_AXIS_0][i].first_cell;
-        for (size_t j = 0; j < a->shape[LSMAT_AXIS_1]; j++) {
-            double va = LSArith_cell_find_cont_(&pa, j, LSMAT_AXIS_1);
-            double vb = LSArith_cell_find_cont_(&pb, j, LSMAT_AXIS_1);
-            LSMat_set(out, i, j, va + vb);
-        }
-    }
-    return LSARITH_OK;
+    return LSArith_mat_addsub_(a, b, out, false);
 }
 
 lsarith_errno_t LSArith_mat_sub(const LSMat_t *restrict a, const LSMat_t *restrict b,
                                 LSMat_t *restrict out) {
-    if (LSArith_mat_is_same_shape_3_(a, b, out) != LSARITH_OK) {
-        return LSARITH_E_SHAPE;
-    }
-    LSMat_zero(out);
-    for (size_t i = 0; i < a->shape[LSMAT_AXIS_0]; i++) {
-        LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
-        LSMatCell_t *pb = b->heads[LSMAT_AXIS_0][i].first_cell;
-        for (size_t j = 0; j < a->shape[LSMAT_AXIS_1]; j++) {
-            double va = LSArith_cell_find_cont_(&pa, j, LSMAT_AXIS_1);
-            double vb = LSArith_cell_find_cont_(&pb, j, LSMAT_AXIS_1);
-            LSMat_set(out, i, j, va - vb);
-        }
-    }
-    return LSARITH_OK;
+    return LSArith_mat_addsub_(a, b, out, true);
 }
 
 lsarith_errno_t LSArith_mat_mul(const LSMat_t *restrict a, const LSMat_t *restrict b,
@@ -87,10 +70,12 @@ lsarith_errno_t LSArith_mat_mul(const LSMat_t *restrict a, const LSMat_t *restri
             double sum = 0.0;
             LSMatCell_t *pa = a->heads[LSMAT_AXIS_0][i].first_cell;
             LSMatCell_t *pb = b->heads[LSMAT_AXIS_1][j].first_cell;
-            for (size_t k = 0; k < a->shape[LSMAT_AXIS_1]; k++) {
-                const double va = LSArith_cell_find_cont_(&pa, k, LSMAT_AXIS_1);
-                const double vb = LSArith_cell_find_cont_(&pb, k, LSMAT_AXIS_0);
+            size_t k = 0;
+            while (pa != NULL && pb != NULL && k < a->shape[LSMAT_AXIS_1]) {
+                const double va = LSMatCell_find_cont(&pa, k, LSMAT_AXIS_1);
+                const double vb = LSMatCell_find_cont(&pb, k, LSMAT_AXIS_0);
                 sum += va * vb;
+                k++;
             }
             LSMat_set(out, i, j, sum);
         }

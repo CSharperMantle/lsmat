@@ -33,6 +33,7 @@ LSMatCell_t *LSMatCell_succ_of(const LSMatCell_t *restrict cell, lsmat_axis_t ax
 LSMatCell_t **LSMatCell_ref_succ_of(LSMatCell_t *restrict cell, lsmat_axis_t axis);
 LSMatCell_t *LSMatCell_prec_of(const LSMatCell_t *restrict cell, lsmat_axis_t axis);
 LSMatCell_t **LSMatCell_ref_prec_of(LSMatCell_t *restrict cell, lsmat_axis_t axis);
+double LSMatCell_find_cont(LSMatCell_t **restrict cell, size_t i, lsmat_axis_t axis);
 
 typedef struct LSMatHead_ {
     LSMatCell_t *first_cell;
